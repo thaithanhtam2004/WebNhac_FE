@@ -3,13 +3,15 @@ import Sidebar from "../elements/SideBar";
 
 export default function MainLayout() {
   return (
-    <div className="flex h-screen text-white bg-gradient-to-br from-[#0a0f1f] via-[#0d1b2a] to-[#000]">
-      {/* Sidebar cố định bên trái */}
-      <Sidebar />
+    <div className="flex h-screen bg-black text-white">
+      {/* Sidebar */}
+      <aside className="w-64 bg-[#1e1e1e] shadow-lg shadow-black/50 border-r border-gray-800">
+        <Sidebar />
+      </aside>
 
-      {/* Khu vực hiển thị trang con */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-6">
+      {/* Main content area */}
+      <main className="flex-1 bg-[#121212] p-6 overflow-y-auto">
+        <div className="rounded-xl bg-[#1a1a1a] p-4 shadow-inner shadow-black/40">
           <Outlet />
         </div>
       </main>
