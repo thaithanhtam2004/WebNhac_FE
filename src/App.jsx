@@ -1,9 +1,15 @@
-import HomePage from "./components/pages/HomePage/home.jsx";
 
-export default function App() {
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import RegisterPage from "./components/pages/RegisterPage";
+
+function App() {
   return (
-    <div className="min-h-screen">
-      <HomePage />
-    </div>
+    <Routes>
+      <Route path="/register" element={<RegisterPage />} />
+    </Routes>
   );
 }
+
+export default App;
+
