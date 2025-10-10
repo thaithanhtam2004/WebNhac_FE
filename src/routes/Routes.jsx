@@ -1,9 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
 import AuthLayout from "../components/layouts/AuthLayout";
-// import MainLayout from "../components/layouts/MainLayout";
+ import MainLayout from "../components/layouts/MainLayout";
 import AdminLayout from "../components/layouts/AdminLayout";
 
 // Pages
+import HomePage from "../components/pages/HomePage/home";
+import RegisterPage from "../components/pages/RegisterPage";
 import Login from "../components/pages/Auth/Login";
 import ForgotPassword from "../components/pages/Auth/ForgotPassword";
 import OTP from "../components/pages/Auth/OTP";
@@ -20,19 +22,19 @@ const router = createBrowserRouter([
     element: <AuthLayout />,
     children: [
       { path: "login", element: <Login /> },
+      { path: "register", element: <RegisterPage /> },
       { path: "forgot-password", element: <ForgotPassword /> },
       { path: "otp", element: <OTP /> },
     ],
   },
-  // {
-  //   path: "/",
-  //   element: <MainLayout />,
-  //   children: [
-  //     { path: "search", element: <Search /> },
-  //     { path: "history", element: <History /> },
-  //     { path: "profile", element: <Profile /> },
-  //   ],
-  // },
+{
+  path: "/",
+  element: <MainLayout />,
+  children: [
+    { index: true, element: <HomePage /> }, // 👈 Trang mặc định khi vào "/"
+  ],
+},
+
   {
     path: "/admin",
     element: <AdminLayout />,
