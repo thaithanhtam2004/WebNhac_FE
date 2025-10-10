@@ -9,6 +9,10 @@ import RegisterPage from "../components/pages/RegisterPage";
 import Login from "../components/pages/Auth/Login";
 import ForgotPassword from "../components/pages/Auth/ForgotPassword";
 import OTP from "../components/pages/Auth/OTP";
+import FavoritesPage from "../components/pages/HomePage/FavoritesPage";
+import PlaylistPage from "../components/pages/HomePage/PlaylistPage";
+import HistoryPage from "../components/pages/HomePage/HistoryPage";
+import AlbumPage from "../components/pages/HomePage/AlbumPage";
 // import Search from "../components/pages/User/Search";
 // import History from "../components/pages/User/History";
 // import Profile from "../components/pages/User/Profile";
@@ -31,7 +35,11 @@ const router = createBrowserRouter([
   path: "/",
   element: <MainLayout />,
   children: [
-    { index: true, element: <HomePage /> }, // 👈 Trang mặc định khi vào "/"
+    { index: true, element: <HomePage /> },
+    { path: "playlist", element: <PlaylistPage /> },
+    { path: "favorites", element: <FavoritesPage /> },
+    { path: "history", element: <HistoryPage /> }, 
+    { path: "album", element: <AlbumPage /> }, // ✅ Thêm ở đây
   ],
 },
 
@@ -41,7 +49,8 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Dashboard /> },   // /admin
       { path: "songs", element: <Songs /> }, 
-      { path: "artists", element: <Artists /> }    // /admin/songs
+      { path: "artists", element: <Artists /> },
+      // /admin/songs
       // sau này bạn thêm: artists, albums, genres, users...
     ],
   },
