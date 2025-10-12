@@ -20,7 +20,12 @@ import ResetPasswordPage from "../components/pages/Auth/ResetPasswordPage";
 import Dashboard from "../components/pages/Admin/Dashboard";
 import Songs from "../components/pages/Admin/ManageSong";
 import Artists from "../components/pages/Admin/ManageArtist";
+import Genres from "../components/pages/Admin/ManageGenre";
+import Albums from "../components/pages/Admin/ManageAlbum";
+import Listeners from "../components/pages/Admin/ManageUser";
+
 import Profile from "../components/pages/User/Profile";
+
 const router = createBrowserRouter([
   {
     path: "/auth",
@@ -50,11 +55,15 @@ const router = createBrowserRouter([
     path: "/admin",
     element: <AdminLayout />,
     children: [
-      { index: true, element: <Dashboard /> }, // /admin
-      { path: "songs", element: <Songs /> },
+
+      { index: true, element: <Dashboard /> },   
+      { path: "songs", element: <Songs /> }, 
       { path: "artists", element: <Artists /> },
-      // /admin/songs
-      // sau này bạn thêm: artists, albums, genres, users...
+      { path: "genres", element: <Genres /> },
+      { path: "albums", element: <Albums /> },
+      { path: "listeners", element: <Listeners /> },
+
+
     ],
   },
 ]);

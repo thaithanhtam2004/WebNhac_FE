@@ -82,7 +82,9 @@
 }
 
 
+
 /* Cuộn trang */
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -95,6 +97,7 @@
   border: 2px solid hsl(var(--background));
   border-radius: 10px;
 }
+
 
 /* === CUSTOM VARIANT === */
 @custom-variant dark (&:is(.dark *));
@@ -111,3 +114,4 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 }
+

@@ -1,41 +1,45 @@
-// src/components/ui/ArtistForm.jsx
-import { X } from "lucide-react";
+// src/components/ui/Admin/Album/AlbumForm.jsx
 import { useState, useEffect } from "react";
+import { X } from "lucide-react";
 
-const ArtistForm = ({ isEdit = false, artist = null, onClose }) => {
+const AlbumForm = ({ isEdit = false, album = null, onClose }) => {
   const [formData, setFormData] = useState({
     name: "",
+    artist: "",
+    year: "",
     description: "",
-    avatar: null,
+    cover: null,
   });
 
   useEffect(() => {
-    if (isEdit && artist) {
+    if (isEdit && album) {
       setFormData({
-        name: artist.name || "",
-        description: artist.description || "",
-        avatar: null,
+        name: album.name || "",
+        artist: album.artist || "",
+        year: album.year || "",
+        description: album.description || "",
+        cover: null,
       });
     }
-  }, [isEdit, artist]);
+  }, [isEdit, album]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleFileChange = (e) => {
-    setFormData({ ...formData, avatar: e.target.files[0] });
+    setFormData({ ...formData, cover: e.target.files[0] });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(isEdit ? "Cập nhật nghệ sĩ:" : "Thêm nghệ sĩ:", formData);
+    console.log(isEdit ? "Cập nhật album:" : "Thêm album:", formData);
     onClose();
   };
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-[#1a1a1a] text-white rounded-2xl shadow-lg w-[420px] p-6 relative">
+      <div className="bg-[#1a1a1a] text-white rounded-2xl shadow-lg w-[480px] p-6 relative">
         {/* Close */}
         <button
           onClick={onClose}
@@ -45,17 +49,41 @@ const ArtistForm = ({ isEdit = false, artist = null, onClose }) => {
         </button>
 
         <h2 className="text-xl font-bold text-center mb-6">
-          {isEdit ? "Chỉnh sửa nghệ sĩ" : "Thêm nghệ sĩ"}
+          {isEdit ? "Chỉnh sửa Album" : "Thêm Album"}
         </h2>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
-          {/* Tên ca sĩ */}
+          {/* Tên Album */}
           <div>
-            <label className="block mb-1 text-sm">Tên nghệ sĩ</label>
+            <label className="block mb-1 text-sm">Tên Album</label>
             <input
               type="text"
               name="name"
               value={formData.name}
+              onChange={handleChange}
+              className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-[#2a2a2a] text-white"
+            />
+          </div>
+
+          {/* Nghệ sĩ */}
+          <div>
+            <label className="block mb-1 text-sm">Nghệ sĩ</label>
+            <input
+              type="text"
+              name="artist"
+              value={formData.artist}
+              onChange={handleChange}
+              className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-[#2a2a2a] text-white"
+            />
+          </div>
+
+          {/* Năm phát hành */}
+          <div>
+            <label className="block mb-1 text-sm">Năm phát hành</label>
+            <input
+              type="number"
+              name="year"
+              value={formData.year}
               onChange={handleChange}
               className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-[#2a2a2a] text-white"
             />
@@ -73,14 +101,14 @@ const ArtistForm = ({ isEdit = false, artist = null, onClose }) => {
             ></textarea>
           </div>
 
-          {/* Ảnh đại diện */}
+          {/* Ảnh bìa */}
           <div>
-            <label className="block mb-1 text-sm">Ảnh đại diện</label>
+            <label className="block mb-1 text-sm">Ảnh bìa</label>
             <label className="flex items-center justify-center px-3 py-2 bg-white text-black hover:bg-gray-200 rounded-lg cursor-pointer text-sm">
               Chọn ảnh
               <input
                 type="file"
-                name="avatar"
+                name="cover"
                 accept="image/*"
                 className="hidden"
                 onChange={handleFileChange}
@@ -110,4 +138,4 @@ const ArtistForm = ({ isEdit = false, artist = null, onClose }) => {
   );
 };
 
-export default ArtistForm;
+export default AlbumForm;
