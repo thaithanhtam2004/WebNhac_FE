@@ -81,16 +81,10 @@
   }
 }
 
-<<<<<<< HEAD
-/* ✅ Fix lệch layout khi cuộn */
-html {
-  overflow-y: scroll;
-}
 
-=======
 
 /* Cuộn trang */
->>>>>>> origin/main
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -103,8 +97,7 @@ html {
   border: 2px solid hsl(var(--background));
   border-radius: 10px;
 }
-<<<<<<< HEAD
-=======
+
 
 /* === CUSTOM VARIANT === */
 @custom-variant dark (&:is(.dark *));
@@ -121,4 +114,4 @@ html {
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 }
->>>>>>> origin/main
+
