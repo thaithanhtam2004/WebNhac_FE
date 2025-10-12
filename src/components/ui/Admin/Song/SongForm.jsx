@@ -81,7 +81,7 @@ const SongForm = ({ isEdit = false, song = null, onClose }) => {
 
           {/* Ca sĩ */}
           <div>
-            <label className="block mb-1 text-sm">Tên ca sĩ</label>
+            <label className="block mb-1 text-sm">Tên nghệ sĩ</label>
             <input
               type="text"
               name="artist"

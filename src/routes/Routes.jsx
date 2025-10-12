@@ -13,6 +13,9 @@ import OTP from "../components/pages/Auth/OTP";
 import Dashboard from "../components/pages/Admin/Dashboard";
 import Songs from "../components/pages/Admin/ManageSong";
 import Artists from "../components/pages/Admin/ManageArtist";
+import Genres from "../components/pages/Admin/ManageGenre";
+import Albums from "../components/pages/Admin/ManageAlbum";
+import Listeners from "../components/pages/Admin/ManageUser";
 
 const router = createBrowserRouter([
   {
@@ -37,10 +40,13 @@ const router = createBrowserRouter([
     path: "/admin",
     element: <AdminLayout />,
     children: [
-      { index: true, element: <Dashboard /> },   // /admin
+      { index: true, element: <Dashboard /> },   
       { path: "songs", element: <Songs /> }, 
-      { path: "artists", element: <Artists /> }    // /admin/songs
-      // sau này bạn thêm: artists, albums, genres, users...
+      { path: "artists", element: <Artists /> },
+      { path: "genres", element: <Genres /> },
+      { path: "albums", element: <Albums /> },
+      { path: "listeners", element: <Listeners /> },
+
     ],
   },
   ]);
