@@ -84,7 +84,7 @@ export default function SearchResultsPage() {
 
       <div className="flex-1 p-6 overflow-y-auto">
         {/* Kết quả tìm kiếm */}
-        <Section title={`Kết quả tìm kiếm cho "${searchQuery}"`}>
+        <Section title={`Kết quả  ${searchQuery}`}>
           {filteredSongs.length === 0 ? (
             <p className="text-gray-400 text-center py-10">
               Không tìm thấy kết quả nào.
