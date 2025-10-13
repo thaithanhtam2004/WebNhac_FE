@@ -18,7 +18,7 @@ function MoodSuggestions({ songs, moods }) {
   return (
     <Section
       title={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <span className="font-semibold text-white text-lg">Gợi ý bài hát</span>
           <select
             value={selectedMood}
@@ -34,7 +34,7 @@ function MoodSuggestions({ songs, moods }) {
         </div>
       }
     >
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {filteredSongs.map((song) => (
           <SongItem key={song.id} title={song.title} artist={song.artist} />
         ))}
@@ -65,9 +65,9 @@ export default function HomePage() {
     <div className="flex flex-col w-full h-full text-white">
       <SearchBar onSearch={handleSearch} />
 
-      <div className="flex-1 p-6 overflow-y-auto text-white">
+      <div className="flex-1 p-4 sm:p-6 overflow-y-auto text-white">
         <Section title="Bài hát nghe gần đây">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             <MusicCard title="Bài 1" artist="Nghệ sĩ 1" />
             <MusicCard title="Bài 2" artist="Nghệ sĩ 2" />
             <MusicCard title="Bài 3" artist="Nghệ sĩ 3" />
@@ -79,7 +79,7 @@ export default function HomePage() {
         <MoodSuggestions songs={suggestedSongs} moods={moods} />
 
         <Section title="Thể loại">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             <GenreTag name="Pop" />
             <GenreTag name="Rock" />
             <GenreTag name="Jazz" />
@@ -88,7 +88,7 @@ export default function HomePage() {
         </Section>
 
         <Section title="Nghệ sĩ nổi bật gần đây">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             <ArtistTag name="Nghệ sĩ 1" />
             <ArtistTag name="Nghệ sĩ 2" />
             <ArtistTag name="Nghệ sĩ 3" />
@@ -97,7 +97,7 @@ export default function HomePage() {
         </Section>
 
         <Section title="Bài hát mới phát hành">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             <SongItem title="Bài 1" artist="Nghệ sĩ 1" />
             <SongItem title="Bài 2" artist="Nghệ sĩ 2" />
             <SongItem title="Bài 3" artist="Nghệ sĩ 3" />
@@ -106,7 +106,7 @@ export default function HomePage() {
         </Section>
 
         <Section title="Album Hot">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             <MusicCard title="Album 1" artist="Nghệ sĩ 1" />
             <MusicCard title="Album 2" artist="Nghệ sĩ 2" />
             <MusicCard title="Album 3" artist="Nghệ sĩ 3" />
