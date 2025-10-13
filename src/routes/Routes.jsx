@@ -14,6 +14,7 @@ import HistoryPage from "../components/pages/HomePage/HistoryPage";
 import AlbumPage from "../components/pages/HomePage/AlbumPage";
 import VerifyOTPPage from "../components/pages/Auth/VerifyOTPPage";
 import ResetPasswordPage from "../components/pages/Auth/ResetPasswordPage";
+import SearchResultsPage from "../components/pages/HomePage/SearchResult";
 // import Search from "../components/pages/User/Search";
 // import History from "../components/pages/User/History";
 // import Profile from "../components/pages/User/Profile";
@@ -48,6 +49,7 @@ const router = createBrowserRouter([
       { path: "history", element: <HistoryPage /> },
       { path: "album", element: <AlbumPage /> },
       { path: "profile", element: <Profile /> },
+      { path: "result", element: <SearchResultsPage /> },
     ],
   },
 
