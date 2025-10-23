@@ -1,14 +1,21 @@
 export default function SongItem({ title, artist }) {
   return (
-    <div className="flex items-center bg-blue-800 p-3 rounded-lg max-w-md justify-between">
-      <div className="flex items-center gap-3">
-        <div className="bg-blue-700 h-12 w-12 rounded-lg"></div>
-        <div>
-          <p className="font-medium">{title}</p>
-          <p className="text-sm text-blue-200">{artist}</p>
-        </div>
+    <div className="bg-gradient-to-br from-blue-600/50 via-purple-700/50 to-pink-600/50 
+                    p-4 rounded-xl w-60 text-center shadow-lg shadow-black/30 
+                    hover:scale-105 transition-transform">
+      {/* Hình đại diện */}
+      <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 h-32 w-full rounded-lg mb-3"></div>
+
+      {/* Thông tin bài hát */}
+      <p className="font-semibold text-white">{title}</p>
+      <p className="text-sm text-pink-200 mb-2">{artist}</p>
+
+      {/* Nút hành động */}
+      <div className="flex justify-center gap-4 text-lg">
+        <span className="hover:text-red-400 transition">❤️</span>
+        <span className="hover:text-green-400 transition">➕</span>
+        <span className="hover:text-cyan-400 transition">▶️</span>
       </div>
-      <button className="text-xl">▶️</button>
     </div>
   );
 }

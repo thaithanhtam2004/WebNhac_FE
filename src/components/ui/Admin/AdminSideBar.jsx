@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+// src/components/ui/Admin/AdminSideBar.jsx
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -12,15 +12,13 @@ import {
   ChevronLeft,
 } from "lucide-react";
 
-export default function AdminSidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
+export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
   const menuItems = [
     { to: "/admin", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
     { to: "/admin/songs", label: "Quản lý bài hát", icon: <Music className="w-5 h-5" /> },
-    { to: "/admin/artists", label: "Quản lý ca sĩ", icon: <Users className="w-5 h-5" /> },
+    { to: "/admin/artists", label: "Quản lý nghệ sĩ", icon: <Users className="w-5 h-5" /> },
     { to: "/admin/genres", label: "Quản lý thể loại", icon: <Tag className="w-5 h-5" /> },
-    { to: "/admin/albums", label: "Quản lý Album", icon: <Disc className="w-5 h-5" /> },
+    { to: "/admin/albums", label: "Quản lý album", icon: <Disc className="w-5 h-5" /> },
     { to: "/admin/listeners", label: "Quản lý người nghe", icon: <UserCircle2 className="w-5 h-5" /> },
   ];
 
@@ -32,7 +30,7 @@ export default function AdminSidebar() {
     <aside
       className={`${
         isCollapsed ? "w-20" : "w-72"
-      } bg-black text-gray-100 flex flex-col transition-all duration-500 ease-in-out shadow-2xl min-h-screen overflow-hidden`}
+      } bg-black text-gray-100 flex flex-col transition-all duration-500 ease-in-out shadow-2xl h-screen`}
     >
       {/* Header */}
       <div className="relative flex items-center h-20 px-4 border-b border-gray-800 bg-black">
@@ -71,7 +69,7 @@ export default function AdminSidebar() {
       )}
 
       {/* Menu */}
-      <nav className="flex-1 px-3 py-6 space-y-2">
+      <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
         {menuItems.map((item) => (
           <NavLink
             key={item.to}
@@ -85,19 +83,17 @@ export default function AdminSidebar() {
               }`
             }
           >
-            <div className="transform transition-transform duration-300 group-hover:scale-110">
-              {item.icon}
-            </div>
+            <div>{item.icon}</div>
             {!isCollapsed && <span className="truncate">{item.label}</span>}
           </NavLink>
         ))}
       </nav>
 
-      {/* Logout */}
+      {/* Logout luôn dính đáy */}
       <div className="px-3 py-6 border-t border-gray-800">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-4 w-full px-4 py-3 rounded-xl text-sm font-semibold bg-white text-gray-900 hover:bg-gray-200 hover:text-gray-900 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-gray-400/20"
+          className="flex items-center gap-4 w-full px-4 py-3 rounded-xl text-sm font-semibold bg-white text-gray-900 hover:bg-gray-200 hover:scale-105 hover:shadow-lg hover:shadow-gray-400/20 transition-all duration-300"
         >
           <LogOut className="w-5 h-5" />
           {!isCollapsed && <span>Đăng xuất</span>}

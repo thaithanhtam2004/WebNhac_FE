@@ -13,20 +13,18 @@ const Artists = () => {
   const [openForm, setOpenForm] = useState(false);
   const [editArtist, setEditArtist] = useState(null);
 
-  // 🟢 Lấy danh sách ca sĩ khi load page
+  // Lấy danh sách ca sĩ khi load page
   const fetchArtists = async () => {
     try {
       const res = await getAllSingers();
       if (res.success) {
-        // map backend data sang FE data
         const mapped = res.data.map((a) => ({
           singerId: a.singerId,
           name: a.name,
-          description: a.bio, // backend bio -> FE description
-          avatar: a.imageUrl, // backend imageUrl -> FE avatar
-          country: a.country || "", // nếu có trường country
+          description: a.bio,
+          avatar: a.imageUrl,
+          country: a.country || "",
         }));
-        console.log("Dữ liệu ca sĩ:", mapped);
         setArtists(mapped);
       }
     } catch (err) {
@@ -60,20 +58,16 @@ const Artists = () => {
     }
   };
 
-  // 🔹 Xử lý submit từ ArtistForm
   const handleFormSubmit = async (artistData) => {
-    // map FE data -> backend data
     const dataToSend = {
       name: artistData.name,
       bio: artistData.description,
-      imageUrl:
-        artistData.avatar instanceof File ? null : artistData.avatar || null,
+      imageUrl: artistData.avatar instanceof File ? null : artistData.avatar || null,
       country: artistData.country || "",
     };
 
     try {
       if (editArtist) {
-        // cập nhật
         const res = await updateSinger(editArtist.singerId, dataToSend);
         if (res.success) {
           setArtists(
@@ -83,9 +77,8 @@ const Artists = () => {
           );
         }
       } else {
-        // thêm mới
         const res = await createSinger(dataToSend);
-        if (res.success) fetchArtists(); // load lại danh sách
+        if (res.success) fetchArtists();
       }
       setOpenForm(false);
     } catch (err) {
@@ -105,11 +98,10 @@ const Artists = () => {
         </button>
       </div>
 
-      {/* Danh sách ca sĩ */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {artists.map((artist) => (
           <div
-            key={artist.singerId} // ✅ dùng singerId làm key
+            key={artist.singerId}
             className="bg-[#1a1a1a] rounded-xl shadow-lg p-4 flex flex-col items-center"
           >
             <img
@@ -141,13 +133,12 @@ const Artists = () => {
         ))}
       </div>
 
-      {/* Form thêm/sửa */}
       {openForm && (
         <ArtistForm
           isEdit={!!editArtist}
           artist={editArtist}
           onClose={() => setOpenForm(false)}
-          onSubmit={handleFormSubmit} // 🔹 kết nối form với API
+          onSubmit={handleFormSubmit}
         />
       )}
     </div>
