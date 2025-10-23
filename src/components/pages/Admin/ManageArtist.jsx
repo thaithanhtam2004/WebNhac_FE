@@ -1,179 +1,148 @@
-// src/components/pages/Admin/Artists.jsx
-import { useState } from "react";
-import { Plus, Edit, Trash } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import ArtistForm from "../../ui/Admin/Artist/ArtistForm";
-import Pagination from "../../elements/Pagination";
+import {
+  getAllSingers,
+  createSinger,
+  updateSinger,
+  deleteSinger,
+} from "../../../services/singerService"; // import service
 
-export default function Artists() {
-  const [artists, setArtists] = useState([
-    {
-      id: 1,
-      name: "Sơn Tùng M-TP",
-      description:
-        "Ca sĩ, nhạc sĩ và nhà sản xuất âm nhạc hàng đầu V-pop, nổi tiếng với phong cách Pop, R&B và Trap hiện đại.",
-    },
-    {
-      id: 2,
-      name: "Obito",
-      description:
-        "Rapper trẻ tài năng, phong cách R&B và Hip-hop hiện đại, được biết đến qua các bản hit chill và cảm xúc.",
-    },
-    {
-      id: 3,
-      name: "Lil Wuyn",
-      description:
-        "Rapper nổi bật trong giới Underground, mang phong cách Rap, Trap và Hip-hop sâu sắc, ca từ ý nghĩa.",
-    },
-    {
-      id: 4,
-      name: "Wrxdie",
-      description:
-        "Ca sĩ trẻ theo đuổi phong cách Indie Pop và Chill R&B, âm nhạc mang màu sắc hiện đại và cảm xúc nhẹ nhàng.",
-    },
-    {
-      id: 5,
-      name: "MCK",
-      description:
-        "Rapper, ca sĩ và producer đa tài, kết hợp Rap, Trap và R&B, là một trong những gương mặt tiêu biểu của thế hệ Gen Z.",
-    },
-  ]);
+const Artists = () => {
+  const [artists, setArtists] = useState([]);
+  const [openForm, setOpenForm] = useState(false);
+  const [editArtist, setEditArtist] = useState(null);
 
-  const [search, setSearch] = useState("");
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isEdit, setIsEdit] = useState(false);
-  const [editingArtist, setEditingArtist] = useState(null);
+  // Lấy danh sách ca sĩ khi load page
+  const fetchArtists = async () => {
+    try {
+      const res = await getAllSingers();
+      if (res.success) {
+        const mapped = res.data.map((a) => ({
+          singerId: a.singerId,
+          name: a.name,
+          description: a.bio,
+          avatar: a.imageUrl,
+          country: a.country || "",
+        }));
+        setArtists(mapped);
+      }
+    } catch (err) {
+      console.error("Lấy ca sĩ lỗi:", err);
+    }
+  };
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  useEffect(() => {
+    fetchArtists();
+  }, []);
 
-  // Lọc theo tên hoặc mô tả
-  const filteredArtists = artists.filter(
-    (a) =>
-      a.name.toLowerCase().includes(search.toLowerCase()) ||
-      a.description.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleAdd = () => {
+    setEditArtist(null);
+    setOpenForm(true);
+  };
 
-  // Dữ liệu sau khi phân trang
-  const totalItems = filteredArtists.length;
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentArtists = filteredArtists.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+  const handleEdit = (artist) => {
+    setEditArtist(artist);
+    setOpenForm(true);
+  };
+
+  const handleDelete = async (singerId) => {
+    if (!singerId) return console.error("Không có ID để xóa!");
+    try {
+      const res = await deleteSinger(singerId);
+      if (res.success) {
+        setArtists(artists.filter((a) => a.singerId !== singerId));
+      }
+    } catch (err) {
+      console.error("Xóa ca sĩ lỗi:", err);
+    }
+  };
+
+  const handleFormSubmit = async (artistData) => {
+    const dataToSend = {
+      name: artistData.name,
+      bio: artistData.description,
+      imageUrl: artistData.avatar instanceof File ? null : artistData.avatar || null,
+      country: artistData.country || "",
+    };
+
+    try {
+      if (editArtist) {
+        const res = await updateSinger(editArtist.singerId, dataToSend);
+        if (res.success) {
+          setArtists(
+            artists.map((a) =>
+              a.singerId === editArtist.singerId ? { ...a, ...artistData } : a
+            )
+          );
+        }
+      } else {
+        const res = await createSinger(dataToSend);
+        if (res.success) fetchArtists();
+      }
+      setOpenForm(false);
+    } catch (err) {
+      console.error("Lưu ca sĩ lỗi:", err);
+    }
+  };
 
   return (
-    <div className="p-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Quản lý nghệ sĩ</h1>
+    <div className="p-6 text-white">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Quản lý ca sĩ</h1>
+        <button
+          onClick={handleAdd}
+          className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200"
+        >
+          <Plus size={18} /> Thêm ca sĩ
+        </button>
+      </div>
 
-        <div className="flex items-center gap-3">
-          <input
-            type="text"
-            placeholder="Tìm kiếm nghệ sĩ..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
-          />
-          <button
-            className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl shadow hover:bg-gray-800 transition"
-            onClick={() => {
-              setIsEdit(false);
-              setEditingArtist(null);
-              setIsFormOpen(true);
-            }}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {artists.map((artist) => (
+          <div
+            key={artist.singerId}
+            className="bg-[#1a1a1a] rounded-xl shadow-lg p-4 flex flex-col items-center"
           >
-            <Plus className="w-5 h-5" />
-            Thêm nghệ sĩ
-          </button>
-        </div>
+            <img
+              src={artist.avatar || "/default-avatar.png"}
+              alt={artist.name}
+              className="w-24 h-24 rounded-full object-cover mb-3"
+            />
+            <h3 className="text-lg font-semibold">{artist.name}</h3>
+            <p className="text-sm text-gray-400">{artist.country}</p>
+            <p className="text-xs text-gray-500 text-center mt-2 line-clamp-2">
+              {artist.description}
+            </p>
+
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => handleEdit(artist)}
+                className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600"
+              >
+                <Edit size={16} />
+              </button>
+              <button
+                onClick={() => handleDelete(artist.singerId)}
+                className="p-2 rounded-lg bg-red-600 hover:bg-red-500"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Table */}
-      <div className="bg-white shadow rounded-xl overflow-x-auto">
-        <table className="min-w-full border border-gray-200">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 w-12">
-                STT
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 w-[200px]">
-                Tên nghệ sĩ
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                Mô tả
-              </th>
-              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900">
-                Hành động
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentArtists.map((artist, index) => (
-              <tr key={artist.id} className="border-t hover:bg-gray-50">
-                <td className="px-4 py-3 text-center font-medium text-gray-700">
-                  {(currentPage - 1) * itemsPerPage + index + 1}
-                </td>
-                <td className="px-6 py-3 text-gray-700 font-medium">
-                  {artist.name}
-                </td>
-                <td className="px-6 py-3 text-gray-500">{artist.description}</td>
-                <td className="px-6 py-3 flex items-center justify-center gap-3">
-                  <button
-                    className="p-2 rounded-full bg-white border border-gray-300 shadow-sm hover:bg-gray-100 text-gray-700 hover:text-black transition"
-                    onClick={() => {
-                      setIsEdit(true);
-                      setEditingArtist(artist);
-                      setIsFormOpen(true);
-                    }}
-                  >
-                    <Edit className="w-5 h-5" />
-                  </button>
-                  <button
-                    className="p-2 rounded-full bg-white border border-gray-300 shadow-sm hover:bg-red-50 text-red-600 hover:text-red-800 transition"
-                    onClick={() =>
-                      setArtists(artists.filter((a) => a.id !== artist.id))
-                    }
-                  >
-                    <Trash className="w-5 h-5" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-
-            {currentArtists.length === 0 && (
-              <tr>
-                <td
-                  colSpan="4"
-                  className="text-center py-6 text-gray-500 italic"
-                >
-                  Không có nghệ sĩ nào được tìm thấy
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalItems={totalItems}
-        onPageChange={setCurrentPage}
-      />
-
-      {/* Form */}
-      {isFormOpen && (
+      {openForm && (
         <ArtistForm
-          isEdit={isEdit}
-          artist={editingArtist}
-          onClose={() => setIsFormOpen(false)}
+          isEdit={!!editArtist}
+          artist={editArtist}
+          onClose={() => setOpenForm(false)}
+          onSubmit={handleFormSubmit}
         />
       )}
     </div>
   );
-}
+};
+
+export default Artists;
