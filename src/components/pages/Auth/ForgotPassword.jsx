@@ -1,12 +1,18 @@
 import React, { useState } from "react";
+import { sendForgotPassword } from "../../../services/authService"; // ✅ import service
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Email gửi yêu cầu:", email);
-    // Gọi API gửi OTP đến email ở đây
+    try {
+      const res = await sendForgotPassword(email);
+      setMessage(res.message || "Mã OTP đã được gửi về email!");
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Lỗi gửi OTP");
+    }
   };
 
   return (
@@ -34,6 +40,8 @@ const ForgotPasswordPage = () => {
             Gửi yêu cầu
           </button>
         </form>
+
+        {message && <p className="mt-4 text-sm text-gray-700">{message}</p>}
       </div>
     </div>
   );
