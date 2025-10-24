@@ -1,119 +1,77 @@
+import React from "react";
 import { useState } from "react";
-import MusicCard from "../../elements/MusicCard";
-import SongItem from "../../elements/SongItem";
-import GenreTag from "../../elements/GenreTag";
-import ArtistTag from "../../elements/ArtistTag";
 import Section from "../../elements/Section";
-import SearchBar from "../../elements/SearchBar";
-
-// Component riêng cho phần Gợi ý bài hát + Dropdown chọn mood
-function MoodSuggestions({ songs, moods }) {
-  const [selectedMood, setSelectedMood] = useState("Tất cả");
-
-  const filteredSongs =
-    selectedMood === "Tất cả"
-      ? songs
-      : songs.filter((song) => song.mood === selectedMood);
-
-  return (
-    <Section
-      title={
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <span className="font-semibold text-white text-lg">Gợi ý bài hát</span>
-          <select
-            value={selectedMood}
-            onChange={(e) => setSelectedMood(e.target.value)}
-            className="bg-[#1a1a1a] text-white px-2 py-1 rounded-lg border border-gray-700"
-          >
-            {moods.map((mood) => (
-              <option key={mood} value={mood}>
-                {mood}
-              </option>
-            ))}
-          </select>
-        </div>
-      }
-    >
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {filteredSongs.map((song) => (
-          <SongItem key={song.id} title={song.title} artist={song.artist} />
-        ))}
-      </div>
-    </Section>
-  );
-}
-
+import MusicCard from "../../elements/MusicCard";
+import { useGetAllSong } from "../../../hooks/useGetAllSong";
+import MusicPlayerBar from "../../elements/MusicPlayerBar";
+// Giả lập thêm các hook khác (bạn có thể thay bằng API thật)
+// import { useGetRecentSongs } from "../../hooks/useGetRecentSongs";
+// import { useGetTopTrendingSongs } from "../../hooks/useGetTopTrendingSongs";
+// import { useGetNewReleaseSongs } from "../../hooks/useGetNewReleaseSongs";
 export default function HomePage() {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const moods = ["Tất cả", "Vui vẻ", "Buồn", "Lãng mạn", "Hưng phấn", "Thư giãn"];
-
-  // Dữ liệu mẫu gợi ý bài hát
-  const suggestedSongs = Array.from({ length: 12 }, (_, i) => ({
-    id: i + 1,
-    title: `Bài hát ${i + 1}`,
-    artist: ["Sơn Tùng M-TP", "Đen Vâu", "Hoàng Thùy Linh", "Jack", "Min"][i % 5],
-    mood: ["Vui vẻ", "Buồn", "Lãng mạn", "Hưng phấn", "Thư giãn"][i % 5],
-  }));
-
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    console.log("Đang tìm kiếm:", query);
-  };
+  const [currentTrack, setCurrentTrack] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   return (
-    <div className="flex flex-col w-full h-full text-white">
-      <SearchBar onSearch={handleSearch} />
+    
+    <div className="flex flex-col w-full h-full text-white p-4 sm:p-6 overflow-y-auto">
+      {/* Section 1: Tất cả bài hát */}
+      <Section
+        title="Tất cả bài hát"
+        useFetchHook={useGetAllSong}
+        
+        renderItem={(song) => (
+          <MusicCard
+            key={song.songId}
+            title={song.title}
+            artist={song.artist}
+            trackPath={song.fileUrl}
+            onPlay={() => {
+              console.log("Selected track:", song);
+  console.log("Track URL:", song.fileUrl);
+              setCurrentTrack(song);
+              setIsPlaying(true); // bật nhạc ngay
+            }}
+          />
+        )}
+      />
 
-      <div className="flex-1 p-4 sm:p-6 overflow-y-auto text-white">
-        <Section title="Bài hát nghe gần đây">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            <MusicCard title="Bài 1" artist="Nghệ sĩ 1" />
-            <MusicCard title="Bài 2" artist="Nghệ sĩ 2" />
-            <MusicCard title="Bài 3" artist="Nghệ sĩ 3" />
-            <MusicCard title="Bài 4" artist="Nghệ sĩ 4" />
-          </div>
-        </Section>
-
-        {/* Section Gợi ý bài hát với Mood */}
-        <MoodSuggestions songs={suggestedSongs} moods={moods} />
-
-        <Section title="Thể loại">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            <GenreTag name="Pop" />
-            <GenreTag name="Rock" />
-            <GenreTag name="Jazz" />
-            <GenreTag name="EDM" />
-          </div>
-        </Section>
-
-        <Section title="Nghệ sĩ nổi bật gần đây">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            <ArtistTag name="Nghệ sĩ 1" />
-            <ArtistTag name="Nghệ sĩ 2" />
-            <ArtistTag name="Nghệ sĩ 3" />
-            <ArtistTag name="Nghệ sĩ 4" />
-          </div>
-        </Section>
-
-        <Section title="Bài hát mới phát hành">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            <SongItem title="Bài 1" artist="Nghệ sĩ 1" />
-            <SongItem title="Bài 2" artist="Nghệ sĩ 2" />
-            <SongItem title="Bài 3" artist="Nghệ sĩ 3" />
-            <SongItem title="Bài 4" artist="Nghệ sĩ 4" />
-          </div>
-        </Section>
-
-        <Section title="Album Hot">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            <MusicCard title="Album 1" artist="Nghệ sĩ 1" />
-            <MusicCard title="Album 2" artist="Nghệ sĩ 2" />
-            <MusicCard title="Album 3" artist="Nghệ sĩ 3" />
-            <MusicCard title="Album 4" artist="Nghệ sĩ 4" />
-          </div>
-        </Section>
-      </div>
+      {/* Music Player Bar */}
+      {currentTrack && (
+        <MusicPlayerBar 
+          tracks={[currentTrack]} 
+          isPlaying={isPlaying} 
+          onPlayPause={setIsPlaying} 
+        />
+      )}
     </div>
+    
   );
 }
+
+      // {/* Section 2: Gần đây */}
+      // <Section
+      //   title="Bài hát nghe gần đây"
+      //   useFetchHook={useGetRecentSongs}
+      //   renderItem={(song) => (
+      //     <MusicCard key={song.songId} title={song.title} artist={song.artist} />
+      //   )}
+      // />
+
+      // {/* Section 3: Top Trending */}
+      // <Section
+      //   title="Top Trending"
+      //   useFetchHook={useGetTopTrendingSongs}
+      //   renderItem={(song) => (
+      //     <MusicCard key={song.songId} title={song.title} artist={song.artist} />
+      //   )}
+      // />
+
+      // {/* Section 4: Mới phát hành */}
+      // <Section
+      //   title="Bài hát mới phát hành"
+      //   useFetchHook={useGetNewReleaseSongs}
+      //   renderItem={(song) => (
+      //     <MusicCard key={song.songId} title={song.title} artist={song.artist} />
+      //   )}
+      // />
