@@ -60,19 +60,19 @@ export const getUserById = async (id, token) => {
 
 // 🟢 Gửi yêu cầu quên mật khẩu (gửi OTP đến email)
 export const sendForgotPassword = async (email) => {
-  const res = await axios.post(`${API_URL}/forgot-password`, { email });
-  return res.data;
-};
-
-// 🟢 Xác thực OTP và đặt lại mật khẩu mới
-export const resetPassword = async (email, otp, newPassword) => {
-  const res = await axios.post(`${API_URL}/reset-password`, {
-    email,
-    otp,
-    newPassword,
-  });
-  return res.data;
-};
+    const res = await axios.post(`${API_URL}/forgot-password`, { email });
+    return res.data;
+  };
+  
+  // 🟢 Xác thực OTP và đặt lại mật khẩu mới
+  export const resetPassword = async (email, otp, newPassword) => {
+    const res = await axios.post(`${API_URL}/reset-password`, {
+      email,
+      otp,
+      newPassword,
+    });
+    return res.data;
+  };
 // 🟢 Vô hiệu hóa user
 export const disableUser = async (id, token) => {
   try {

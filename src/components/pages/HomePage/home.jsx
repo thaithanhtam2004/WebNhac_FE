@@ -1,77 +1,75 @@
-import MusicCard from "../../elements/MusicCard";
-import SongItem from "../../elements/SongItem";
-import GenreTag from "../../elements/GenreTag";
-import ArtistTag from "../../elements/ArtistTag";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Section from "../../elements/Section";
-import SearchBar from "../../elements/SearchBar";
+import MusicCard from "../../elements/MusicCard";
+import { useGetAllSong } from "../../../hooks/useGetAllSong";
+import { useGetSongByReleaseDate } from "../../../hooks/useGetSongByReleaseDate";
+import MusicPlayerBar from "../../elements/MusicPlayerBar";
 
 export default function HomePage() {
-  const handleSearch = (query) => {
-    console.log("Đang tìm kiếm:", query);
-    // 👉 gọi API tìm kiếm hoặc cập nhật state tại đây
-  };
+  const [currentTrack, setCurrentTrack] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col w-full h-full text-white">
-      {/* Thanh tìm kiếm */}
-      <SearchBar onSearch={handleSearch} />
+    <div className="flex flex-col w-full h-full text-white p-4 sm:p-6 overflow-y-auto">
+      {/* Section 1: Tất cả bài hát */}
+      <Section
+        title="TẤT CẢ BÀI HÁT"
+        useFetchHook={useGetAllSong}
+        renderItem={(song) => (
+          <MusicCard
+            key={song.songId}
+            title={song.title}
+            artist={song.artist}
+            trackPath={song.fileUrl}
+            onPlay={() => {
+              console.log("Selected track:", song);
+              console.log("Track URL:", song.fileUrl);
+              setCurrentTrack(song);
+              setIsPlaying(true);
+            }}
+          />
+        )}
+      />
 
-      {/* Nội dung chính */}
-      <div className="flex-1 p-6 overflow-y-auto text-white">
-        <Section title="Bài hát nghe gần đây">
-          <div className="grid grid-cols-4 gap-4">
-            <MusicCard title="Bài 1" artist="Nghệ sĩ 1" />
-            <MusicCard title="Bài 2" artist="Nghệ sĩ 2" />
-            <MusicCard title="Bài 3" artist="Nghệ sĩ 3" />
-            <MusicCard title="Bài 4" artist="Nghệ sĩ 4" />
-          </div>
-        </Section>
+      {/* Section 2: Bài hát mới nhất */}
+      <Section
+        title="MỚI PHÁT HÀNH"
+        useFetchHook={useGetSongByReleaseDate}
+        // headerRight sẽ render nút ở góc phải
+        headerRight={
+          <button
+            onClick={() => navigate("/latest")}
+            className="text-white hover:text-cyan-300 font-semibold text-sm transition"
+          >
+            Tất cả
+          </button>
+        }
+        renderItem={(song) => (
+          <MusicCard
+            key={song.songId}
+            title={song.title}
+            artist={song.artist}
+            trackPath={song.fileUrl}
+            onPlay={() => {
+              console.log("Selected track:", song);
+              console.log("Track URL:", song.fileUrl);
+              setCurrentTrack(song);
+              setIsPlaying(true);
+            }}
+          />
+        )}
+      />
 
-        <Section title="Gợi ý bài hát">
-          <div className="grid grid-cols-4 gap-4">
-            <SongItem title="Bài 1" artist="Nghệ sĩ 1" />
-            <SongItem title="Bài 2" artist="Nghệ sĩ 2" />
-            <SongItem title="Bài 3" artist="Nghệ sĩ 3" />
-            <SongItem title="Bài 4" artist="Nghệ sĩ 4" />
-          </div>
-        </Section>
-
-        <Section title="Thể loại">
-          <div className="grid grid-cols-4 gap-4">
-            <GenreTag name="Pop" />
-            <GenreTag name="Rock" />
-            <GenreTag name="Jazz" />
-            <GenreTag name="EDM" />
-          </div>
-        </Section>
-
-        <Section title="Nghệ sĩ nổi bật gần đây">
-          <div className="grid grid-cols-4 gap-4">
-            <ArtistTag name="Nghệ sĩ 1" />
-            <ArtistTag name="Nghệ sĩ 2" />
-            <ArtistTag name="Nghệ sĩ 3" />
-            <ArtistTag name="Nghệ sĩ 4" />
-          </div>
-        </Section>
-
-        <Section title="Bài hát mới phát hành">
-          <div className="grid grid-cols-4 gap-4">
-            <SongItem title="Bài 1" artist="Nghệ sĩ 1" />
-            <SongItem title="Bài 2" artist="Nghệ sĩ 2" />
-            <SongItem title="Bài 3" artist="Nghệ sĩ 3" />
-            <SongItem title="Bài 4" artist="Nghệ sĩ 4" />
-          </div>
-        </Section>
-
-        <Section title="Album Hot">
-          <div className="grid grid-cols-4 gap-4">
-            <MusicCard title="Album 1" artist="Nghệ sĩ 1" />
-            <MusicCard title="Album 2" artist="Nghệ sĩ 2" />
-            <MusicCard title="Album 3" artist="Nghệ sĩ 3" />
-            <MusicCard title="Album 4" artist="Nghệ sĩ 4" />
-          </div>
-        </Section>
-      </div>
+      {/* Music Player Bar */}
+      {currentTrack && (
+        <MusicPlayerBar
+          tracks={[currentTrack]}
+          isPlaying={isPlaying}
+          onPlayPause={setIsPlaying}
+        />
+      )}
     </div>
   );
 }

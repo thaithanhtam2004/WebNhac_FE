@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import { Plus, Edit, Trash, Eye, X } from "lucide-react"; // Import Eye và X
 import ArtistForm from "../../ui/Admin/Artist/ArtistForm";
 import Pagination from "../../elements/Pagination";
@@ -296,3 +297,4 @@ export default function ManageSinger() {
     </div>
   );
 }
+
