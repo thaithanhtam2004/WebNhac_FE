@@ -12,10 +12,14 @@ import FavoritesPage from "../components/pages/HomePage/FavoritesPage";
 import PlaylistPage from "../components/pages/HomePage/PlaylistPage";
 import HistoryPage from "../components/pages/HomePage/HistoryPage";
 import AlbumPage from "../components/pages/HomePage/AlbumPage";
+import AlbumListPage from "../components/pages/HomePage/AlbumListPage";
+
 import VerifyOTPPage from "../components/pages/Auth/VerifyOTPPage";
 import ResetPasswordPage from "../components/pages/Auth/ResetPasswordPage";
+
 import SearchResultsPage from "../components/pages/HomePage/SearchResult";
 import LatestSongsPage from "../components/pages/HomePage/LastestPage";
+
 // import Search from "../components/pages/User/Search";
 // import History from "../components/pages/User/History";
 // import Profile from "../components/pages/User/Profile";
@@ -48,10 +52,14 @@ const router = createBrowserRouter([
       { path: "playlist", element: <PlaylistPage /> },
       { path: "favorites", element: <FavoritesPage /> },
       { path: "history", element: <HistoryPage /> },
-      { path: "album", element: <AlbumPage /> },
+      { path: "albums", element: <AlbumListPage /> },
+      { path: "albums/:albumId", element: <AlbumPage /> },
+
       { path: "profile", element: <Profile /> },
+
       { path: "result", element: <SearchResultsPage /> },
       { path: "latest", element: <LatestSongsPage /> },
+
     ],
   },
 
@@ -59,15 +67,12 @@ const router = createBrowserRouter([
     path: "/admin",
     element: <AdminLayout />,
     children: [
-
-      { index: true, element: <Dashboard /> },   
-      { path: "songs", element: <Songs /> }, 
+      { index: true, element: <Dashboard /> },
+      { path: "songs", element: <Songs /> },
       { path: "artists", element: <Artists /> },
       { path: "genres", element: <Genres /> },
       { path: "albums", element: <Albums /> },
       { path: "listeners", element: <Listeners /> },
-
-
     ],
   },
 ]);

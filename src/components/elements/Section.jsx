@@ -1,7 +1,9 @@
 import React from "react";
 
+
 export default function Section({ title, useFetchHook, renderItem, headerRight }) {
   const { data, loading, error } = useFetchHook();
+
 
   // Header chung
   const renderHeader = (
@@ -10,6 +12,7 @@ export default function Section({ title, useFetchHook, renderItem, headerRight }
       {headerRight && <div>{headerRight}</div>}
     </div>
   );
+
 
   if (loading)
     return (
@@ -27,6 +30,7 @@ export default function Section({ title, useFetchHook, renderItem, headerRight }
       </section>
     );
 
+
   if (!data || data.length === 0)
     return (
       <section className="mb-8 px-8">
@@ -35,14 +39,13 @@ export default function Section({ title, useFetchHook, renderItem, headerRight }
       </section>
     );
 
-  // Giới hạn tối đa 5 bài
+
   const limitedData = data.slice(0, 5);
 
   return (
     <section className="mb-10 px-8">
       {renderHeader}
 
-      {/* Hiển thị 5 bài ngang bằng nhau */}
       <div className="flex gap-4">
         {limitedData.map((item, index) => (
           <div key={index} className="flex-1 min-w-[200px]">
