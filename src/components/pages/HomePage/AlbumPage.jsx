@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Heart, ListPlus, Play } from "lucide-react";
 import { getAlbumById, getAllAlbums } from "../../../services/albumService";
 import AlbumCard from "../../elements/AlbumCard";
-import Section from "../../elements/Section";
+import SectionAlbum from "../../elements/SectionAlbum";
 
 export default function AlbumPage() {
   const navigate = useNavigate();
@@ -121,7 +121,7 @@ export default function AlbumPage() {
 
       {/* Section gợi ý album khác */}
       {albums.length > 1 && (
-        <Section
+        <SectionAlbum
           title="Album liên quan"
           data={albums.filter((a) => a.albumId !== album.albumId)}
           renderItem={(a) => (

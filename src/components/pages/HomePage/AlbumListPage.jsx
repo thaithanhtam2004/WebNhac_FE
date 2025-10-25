@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllAlbums } from "../../../services/albumService";
 import AlbumCard from "../../elements/AlbumCard";
-import Section from "../../elements/Section";
+import SectionAlbum from "../../elements/SectionAlbum";
 
 export default function AlbumListPage() {
   const [albums, setAlbums] = useState([]);
@@ -38,7 +38,7 @@ export default function AlbumListPage() {
 
   return (
     <div className="p-6">
-      <Section
+      <SectionAlbum
         title="Tất cả Album"
         data={albums}
         renderItem={(album) => (
