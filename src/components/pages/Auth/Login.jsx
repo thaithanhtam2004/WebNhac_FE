@@ -2,14 +2,17 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef } from "react";
 import axios from "axios";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useAuth } from "../../providers/AuthContext"; // ✅ Thêm
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth(); // ✅ Lấy hàm login từ AuthContext
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(""); // ✅ thêm state hiển thị thành công
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   // refs cho phím ↑ ↓
@@ -39,9 +42,16 @@ export default function Login() {
       });
 
       if (res.data.success) {
-        localStorage.setItem("token", res.data.token);
-        setSuccess(" Đăng nhập thành công!");
-        setTimeout(() => navigate("/"), 1500); // chuyển trang sau 1.5s
+        const { token, user } = res.data;
+
+        // ✅ Lưu token vào localStorage
+        localStorage.setItem("token", token);
+
+        // ✅ Cập nhật AuthContext với thông tin user
+        login(user);
+
+        setSuccess("Đăng nhập thành công!");
+        setTimeout(() => navigate("/"), 1500);
       } else {
         setError(res.data.message || "Đăng nhập thất bại");
       }
@@ -121,7 +131,7 @@ export default function Login() {
           <p>
             Chưa có tài khoản?{" "}
             <Link to="/auth/register" className="text-blue-400 hover:underline">
-              Đăng KÝ
+              Đăng ký
             </Link>
           </p>
           <p>
