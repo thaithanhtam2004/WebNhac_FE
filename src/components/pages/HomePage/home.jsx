@@ -2,42 +2,53 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Section from "../../elements/Section";
 import MusicCard from "../../elements/MusicCard";
-import { useGetAllSong } from "../../../hooks/useGetAllSong";
 import { useGetSongByReleaseDate } from "../../../hooks/useGetSongByReleaseDate";
+import { useGetUserRecommendations } from "../../../hooks/useGetUserRecommendations";
 import MusicPlayerBar from "../../elements/MusicPlayerBar";
 
-export default function HomePage() {
+export default function HomePage({ userId }) {
   const [currentTrack, setCurrentTrack] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const navigate = useNavigate();
 
+  // Hook lấy recommendation cho user hiện tại
+  const { data: recommendations, loading: recLoading, error: recError } = useGetUserRecommendations("U001");
+
+  // Hook lấy bài hát mới phát hành
+  const { data: latestSongs, loading: latestLoading, error: latestError } = useGetSongByReleaseDate();
+
   return (
     <div className="flex flex-col w-full h-full text-white p-4 sm:p-6 overflow-y-auto">
-      {/* Section 1: Tất cả bài hát */}
-      <Section
-        title="TẤT CẢ BÀI HÁT"
-        useFetchHook={useGetAllSong}
-        renderItem={(song) => (
-          <MusicCard
-            key={song.songId}
-            title={song.title}
-            artist={song.artist}
-            trackPath={song.fileUrl}
-            onPlay={() => {
-              console.log("Selected track:", song);
-              console.log("Track URL:", song.fileUrl);
-              setCurrentTrack(song);
-              setIsPlaying(true);
-            }}
-          />
-        )}
-      />
-
-      {/* Section 2: Bài hát mới nhất */}
+      
+      {/* Section: Gợi ý cho bạn */}
+     <Section
+  title="GỢI Ý CHO BẠN"
+  useFetchHook={() => ({ data: recommendations, loading: recLoading, error: recError })}
+  renderItem={(song) => (
+    <MusicCard
+      key={song.songId}
+      title={song.title}
+      artist={song.singerName} // sửa từ artist sang singerName
+      trackPath={song.fileUrl}
+      onPlay={() => {
+        setCurrentTrack(song);
+        setIsPlaying(true);
+      }}
+    />
+  )}
+  headerRight={
+    <button
+      onClick={() => navigate("/recommendations")}
+      className="text-white hover:text-cyan-300 font-semibold text-sm transition"
+    >
+      Tất cả
+    </button>
+  }
+/>
+      {/* Section: Bài hát mới nhất */}
       <Section
         title="MỚI PHÁT HÀNH"
-        useFetchHook={useGetSongByReleaseDate}
-        // headerRight sẽ render nút ở góc phải
+        useFetchHook={() => ({ data: latestSongs, loading: latestLoading, error: latestError })}
         headerRight={
           <button
             onClick={() => navigate("/latest")}
@@ -53,8 +64,6 @@ export default function HomePage() {
             artist={song.artist}
             trackPath={song.fileUrl}
             onPlay={() => {
-              console.log("Selected track:", song);
-              console.log("Track URL:", song.fileUrl);
               setCurrentTrack(song);
               setIsPlaying(true);
             }}
