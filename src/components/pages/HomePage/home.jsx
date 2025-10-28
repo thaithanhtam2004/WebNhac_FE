@@ -12,7 +12,7 @@ export default function HomePage({ userId }) {
   const navigate = useNavigate();
 
   // Hook lấy recommendation cho user hiện tại
-  const { data: recommendations, loading: recLoading, error: recError } = useGetUserRecommendations("U001");
+  const { data: recommendations, loading: recLoading, error: recError } = useGetUserRecommendations("U002");
 
   // Hook lấy bài hát mới phát hành
   const { data: latestSongs, loading: latestLoading, error: latestError } = useGetSongByReleaseDate();
