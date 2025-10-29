@@ -48,9 +48,7 @@ export default function HomePage() {
       <div className="flex justify-end mb-4">
         {user ? (
           <div className="flex items-center gap-3">
-            <span className="font-semibold text-cyan-300">
-              {user.tennguoidung || user.username || user.email}
-            </span>
+            <span className="font-semibold text-cyan-300">{user.name}</span>
             <button
               onClick={logout}
               className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded-lg transition flex items-center gap-1"

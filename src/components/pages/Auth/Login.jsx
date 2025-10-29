@@ -42,13 +42,13 @@ export default function Login() {
       });
 
       if (res.data.success) {
-        const { token, user } = res.data;
+        const userData = res.data.data; // ✅ lấy đúng phần data từ backend
 
         // ✅ Lưu token vào localStorage
-        localStorage.setItem("token", token);
+        localStorage.setItem("token", userData.token);
 
         // ✅ Cập nhật AuthContext với thông tin user
-        login(user);
+        login(userData);
 
         setSuccess("Đăng nhập thành công!");
         setTimeout(() => navigate("/"), 1500);
