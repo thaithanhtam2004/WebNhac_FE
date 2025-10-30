@@ -5,9 +5,10 @@ const API_URL = "http://localhost:3000/api/playlists";
 
 // 🟢 Lấy tất cả playlist của user
 export const getPlaylistsByUser = async (userId) => {
+  if (!userId) return []; // nếu user chưa đăng nhập
   try {
-    const res = await axios.get(`${API_URL}?userId=${userId}`);
-    return res.data.data; // ✅ lấy đúng data từ response
+    const res = await axios.get(`${API_URL}/user/${userId}`);
+    return res.data.data; // lấy đúng data từ response
   } catch (err) {
     console.error("❌ Lỗi getPlaylistsByUser:", err);
     return [];
@@ -46,3 +47,25 @@ export const deletePlaylist = async (id) => {
     throw err;
   }
 };
+
+
+export const getPlaylistById = async (id) => {
+  try {
+    const res = await axios.get(`${API_URL}/${id}`);
+    return res.data.data; // data là playlist chi tiết
+  } catch (err) {
+    console.error("❌ Lỗi getPlaylistById:", err);
+    return null;
+  }
+};
+
+export const getSongsOfPlaylist = async (playlistId) => {
+  try {
+    const res = await axios.get(`${API_URL}/${playlistId}/songs`);
+    return res.data.data; // mảng các bài hát
+  } catch (err) {
+    console.error("❌ Lỗi getSongsOfPlaylist:", err);
+    return [];
+  }
+};
+

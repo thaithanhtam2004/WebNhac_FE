@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"; // ✅ import hook điều hư�
 
 const menuItems = [
   { icon: Home, label: "Trang chủ", path: "/" },
-  { icon: Music, label: "Playlist cá nhân", path: "/playlist" }, // ✅ trang playlist
+  { icon: Music, label: "Playlist cá nhân", path: "/playlistlist" }, // ✅ trang playlist
   { icon: Clock, label: "Lịch sử nghe", path: "/history" },
   { icon: Heart, label: "Yêu thích", path: "/favorites" },
 ];

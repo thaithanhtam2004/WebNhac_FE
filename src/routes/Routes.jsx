@@ -9,10 +9,12 @@ import RegisterPage from "../components/pages/RegisterPage";
 import Login from "../components/pages/Auth/Login";
 import ForgotPassword from "../components/pages/Auth/ForgotPassword";
 import FavoritesPage from "../components/pages/HomePage/FavoritesPage";
-import PlaylistPage from "../components/pages/HomePage/PlaylistPage";
+
 import HistoryPage from "../components/pages/HomePage/HistoryPage";
 import AlbumPage from "../components/pages/HomePage/AlbumPage";
 import AlbumListPage from "../components/pages/HomePage/AlbumListPage";
+import PlaylistListPage from "../components/pages/HomePage/PlaylistListPage"; // danh sách playlist
+import PlaylistPage from "../components/pages/HomePage/Playlist"; // chi tiết playlist
 
 import VerifyOTPPage from "../components/pages/Auth/VerifyOTPPage";
 import ResetPasswordPage from "../components/pages/Auth/ResetPasswordPage";
@@ -20,9 +22,6 @@ import ResetPasswordPage from "../components/pages/Auth/ResetPasswordPage";
 import SearchResultsPage from "../components/pages/HomePage/SearchResult";
 import LatestSongsPage from "../components/pages/HomePage/LastestPage";
 
-// import Search from "../components/pages/User/Search";
-// import History from "../components/pages/User/History";
-// import Profile from "../components/pages/User/Profile";
 import Dashboard from "../components/pages/Admin/Dashboard";
 import Songs from "../components/pages/Admin/ManageSong";
 import Artists from "../components/pages/Admin/ManageArtist";
@@ -33,6 +32,7 @@ import Features from "../components/pages/Admin/MangeSongFeature";
 import Profile from "../components/pages/User/Profile";
 
 const router = createBrowserRouter([
+  // 🔹 Auth routes
   {
     path: "/auth",
     element: <AuthLayout />,
@@ -44,25 +44,26 @@ const router = createBrowserRouter([
       { path: "reset-password", element: <ResetPasswordPage /> },
     ],
   },
+
+  // 🔹 Main user routes
   {
     path: "/",
     element: <MainLayout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: "playlist", element: <PlaylistPage /> },
+      { path: "playlistlist", element: <PlaylistListPage /> }, // danh sách playlist
+      { path: "playlists/:playlistId", element: <PlaylistPage /> }, // chi tiết playlist
       { path: "favorites", element: <FavoritesPage /> },
       { path: "history", element: <HistoryPage /> },
       { path: "albums", element: <AlbumListPage /> },
       { path: "albums/:albumId", element: <AlbumPage /> },
-
       { path: "profile", element: <Profile /> },
-
       { path: "result", element: <SearchResultsPage /> },
       { path: "latest", element: <LatestSongsPage /> },
-
     ],
   },
 
+  // 🔹 Admin routes
   {
     path: "/admin",
     element: <AdminLayout />,

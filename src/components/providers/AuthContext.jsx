@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
 
     // Gán lại các field chuẩn hóa
     const formattedUser = {
-      id: data.userId,
+      userId: data.userId,
       name: data.name,
       email: data.email,
       token: data.token, // Lưu token nếu cần gọi API bảo mật

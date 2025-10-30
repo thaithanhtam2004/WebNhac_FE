@@ -4,9 +4,9 @@ import { useAuth } from "../../providers/AuthContext";
 import {
   getHistoryByUser,
   addHistorySong,
-  removeHistorySong,
-  clearHistory,
-} from "../../services/historyService";
+  deleteHistorySong,   // ✅ đúng tên export
+  clearAllHistory,      // ✅ đúng tên export
+} from "../../../services/historyService";
 
 export default function HistoryPage() {
   const { user } = useAuth();
@@ -33,19 +33,20 @@ export default function HistoryPage() {
   // 🔹 Xử lý Play bài hát
   const handlePlaySong = async (song) => {
     try {
-      // TODO: play audio
       console.log("Playing:", song.title);
 
       // Lưu vào lịch sử
       if (user && user.id) {
         const savedSong = await addHistorySong({
           userId: user.id,
-          songId: song.id,
+          songId: song.songId || song.id, // ✅ đề phòng API trả về songId
         });
 
         // Cập nhật state ngay lập tức
         setHistorySongs((prev) => {
-          const filtered = prev.filter((s) => s.id !== song.id);
+          const filtered = prev.filter(
+            (s) => (s.songId || s.id) !== (song.songId || song.id)
+          );
           return [savedSong, ...filtered];
         });
       }
@@ -55,10 +56,12 @@ export default function HistoryPage() {
   };
 
   // ❌ Xóa 1 bài
-  const handleDeleteSong = async (id) => {
+  const handleDeleteSong = async (songId) => {
     try {
-      await removeHistorySong(id);
-      setHistorySongs((prev) => prev.filter((song) => song.id !== id));
+      await deleteHistorySong(songId); // ✅ dùng đúng hàm
+      setHistorySongs((prev) =>
+        prev.filter((song) => (song.songId || song.id) !== songId)
+      );
     } catch (err) {
       console.error("Xóa bài hát thất bại:", err);
     }
@@ -69,7 +72,7 @@ export default function HistoryPage() {
     if (!window.confirm("Bạn có chắc muốn xóa toàn bộ lịch sử nghe không?"))
       return;
     try {
-      await clearHistory(user.id);
+      await clearAllHistory(user.id); // ✅ dùng đúng hàm
       setHistorySongs([]);
     } catch (err) {
       console.error("Xóa toàn bộ lịch sử thất bại:", err);
@@ -78,10 +81,11 @@ export default function HistoryPage() {
 
   // 🔍 Lọc bài hát
   const filteredSongs = historySongs.filter((song) =>
-    song.title.toLowerCase().includes(searchTerm.toLowerCase())
+    song.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatDate = (isoString) => {
+    if (!isoString) return "Không xác định";
     const date = new Date(isoString);
     return date.toLocaleString("vi-VN", {
       hour: "2-digit",
@@ -128,6 +132,7 @@ export default function HistoryPage() {
         </div>
       </div>
 
+      {/* Danh sách lịch sử */}
       <div className="bg-[#1a1a1a] rounded-xl p-4 shadow-inner shadow-black/40 max-h-[520px] overflow-y-auto">
         {loading ? (
           <p className="text-gray-400 text-center py-10">Đang tải lịch sử...</p>
@@ -139,12 +144,12 @@ export default function HistoryPage() {
           <ul className="divide-y divide-gray-800">
             {filteredSongs.map((song) => (
               <li
-                key={song.id}
+                key={song.songId || song.id}
                 className="flex items-center justify-between py-3 px-2 hover:bg-[#2a2a2a] rounded-lg transition-all duration-200"
               >
                 <div className="flex items-center gap-4">
                   <img
-                    src={song.cover}
+                    src={song.coverUrl || song.cover}
                     alt={song.title}
                     className="w-12 h-12 rounded-md object-cover"
                   />
@@ -152,7 +157,9 @@ export default function HistoryPage() {
                     <p className="text-base font-semibold text-white">
                       {song.title}
                     </p>
-                    <p className="text-sm text-gray-400">{song.artist}</p>
+                    <p className="text-sm text-gray-400">
+                      {song.singerName || song.artist}
+                    </p>
                     <p className="text-xs text-gray-500 mt-1">
                       Nghe lần cuối: {formatDate(song.lastPlayed)}
                     </p>
@@ -170,7 +177,7 @@ export default function HistoryPage() {
                     <ListPlus className="w-5 h-5 text-pink-400" />
                   </button>
                   <button
-                    onClick={() => handleDeleteSong(song.id)}
+                    onClick={() => handleDeleteSong(song.songId || song.id)}
                     className="p-2 bg-red-500/20 rounded-full hover:bg-red-500/40 transition"
                   >
                     <Trash2 className="w-5 h-5 text-red-400" />
