@@ -14,7 +14,7 @@ export function useGetUserRecommendations(userId, limit = 20) {
     async function fetchRecommendations() {
       try {
         const res = await axios.get(
-          `http://localhost:3000/api/recommendations/${userId}/details?limit=${limit}`
+          `http://localhost:3000/api/recommend/${userId}/details?limit=${limit}`
         );
         setData(res.data.data || []); // route /details trả { data: [...] }
       } catch (err) {

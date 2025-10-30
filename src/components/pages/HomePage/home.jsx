@@ -16,6 +16,10 @@ export default function HomePage() {
   const [loadingAlbums, setLoadingAlbums] = useState(true);
   const navigate = useNavigate();
 
+
+  // Hook lấy recommendation cho user hiện tại
+  const { data: recommendations, loading: recLoading, error: recError } = useGetUserRecommendations("U002");
+
   const { user, logout } = useAuth(); // ✅ Lấy thông tin user từ AuthContext
 
   // Lấy danh sách album

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = "http://localhost:3000/api/recommendations";
+const API_BASE = "http://localhost:3000/api/recommend";
 
 // Lấy recommendation + thông tin bài hát
 export const getRecommendSongWithDetail = async (userId, limit = 20) => {
