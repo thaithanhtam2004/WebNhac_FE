@@ -261,82 +261,83 @@ export default function Albums() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white shadow rounded-xl overflow-x-auto">
-        <table className="min-w-full border border-gray-200">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 w-12">STT</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Tên Album</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Nghệ sĩ</th>
-              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900">Năm</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Mô tả</th>
-              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900">Hành động</th>
-            </tr>
-          </thead>
+     {/* Table */}
+      <div className="bg-white shadow rounded-xl overflow-x-auto">
+      <table className="table-fixed min-w-full border border-gray-200">
+      <thead className="bg-gray-100">
+            <tr>
+            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 w-[5%]">STT</th>
+            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 w-[25%]">Tên Album</th>
+            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 w-[20%]">Nghệ sĩ</th>
+            <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900 w-[10%]">Năm</th>
+            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 w-[25%]">Mô tả</th>
+            <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900 w-[15%]">Hành động</th>
+            </tr>
+      </thead>
 
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="6" className="text-center py-4 text-gray-600">Đang tải...</td>
-              </tr>
-            ) : error ? (
-              <tr>
-                <td colSpan="6" className="text-center py-4 text-red-500">{error}</td>
-              </tr>
-            ) : paginatedAlbums.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="text-center py-4 text-gray-600 italic">Không có album nào</td>
-              </tr>
-            ) : (
-              paginatedAlbums.map((album, index) => (
-                <tr key={album.albumId || album.id || index} className="border-t hover:bg-gray-50">
-                  <td className="px-4 py-3 text-center text-gray-700 font-medium">
-                    {startIndex + index + 1}
-                  </td>
-                  <td className="px-6 py-3 text-gray-700">{album?.name || "—"}</td>
-                  <td className="px-6 py-3 text-gray-700">{album?.singerName || "—"}</td>
-                  <td className="px-6 py-3 text-center text-gray-700">
-                    {formatReleaseYear(album?.releaseDate)}
-                  </td>
-                  <td className="px-6 py-3 text-gray-700">
-                    {truncateText(album?.description, 60)}
-                  </td>
-                  <td className="px-6 py-3 text-center">
-                    <div className="flex justify-center gap-2">
-                      <button
-                        onClick={() => handleViewDetail(album)}
-                        className="p-2 border rounded-full bg-white shadow-sm hover:bg-blue-50 text-blue-600 hover:text-blue-800 transition"
-                        title="Xem chi tiết"
-                      >
-                        <Eye className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEdit(true);
-                          setEditingAlbum(album);
-                          setIsFormOpen(true);
-                        }}
-                        className="p-2 border rounded-full bg-white shadow-sm hover:bg-gray-100 text-gray-700 hover:text-black transition"
-                        title="Chỉnh sửa"
-                      >
-                        <Edit className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(album.albumId || album.id || album._id)}
-                        className="p-2 border rounded-full bg-white shadow-sm hover:bg-red-50 text-red-600 hover:text-red-800 transition"
-                        title="Xóa"
-                      >
-                        <Trash className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <tbody>
+            {loading ? (
+            <tr>
+            <td colSpan="6" className="text-center py-4 text-gray-600">Đang tải...</td>
+            </tr>
+            ) : error ? (
+            <tr>
+            <td colSpan="6" className="text-center py-4 text-red-500">{error}</td>
+            </tr>
+            ) : paginatedAlbums.length === 0 ? (
+            <tr>
+            <td colSpan="6" className="text-center py-4 text-gray-600 italic">Không có album nào</td>
+            </tr>
+            ) : (
+            paginatedAlbums.map((album, index) => (
+            <tr key={album.albumId || album.id || index} className="border-t hover:bg-gray-50">
+                  <td className="px-4 py-3 text-center text-gray-700 font-medium truncate">
+                  {startIndex + index + 1}
+                  </td>
+                  <td className="px-6 py-3 text-gray-700 truncate">{album?.name || "—"}</td>
+                  <td className="px-6 py-3 text-gray-700 truncate">{album?.singerName || "—"}</td>
+                  <td className="px-6 py-3 text-center text-gray-700 truncate">
+                  {formatReleaseYear(album?.releaseDate)}
+                  </td>
+                  <td className="px-6 py-3 text-gray-700 truncate">
+                  {truncateText(album?.description, 60)}
+                  </td>
+                  <td className="px-6 py-3 text-center">
+                  <div className="flex justify-center gap-2">
+                  <button
+                        onClick={() => handleViewDetail(album)}
+                        className="p-2 border rounded-full bg-white shadow-sm hover:bg-blue-50 text-blue-600 hover:text-blue-800 transition"
+                        title="Xem chi tiết"
+                  >
+                        <Eye className="w-5 h-5" />
+                  </button>
+                  <button
+                        onClick={() => {
+                        setIsEdit(true);
+                        setEditingAlbum(album);
+                        setIsFormOpen(true);
+                        }}
+                        className="p-2 border rounded-full bg-white shadow-sm hover:bg-gray-100 text-gray-700 hover:text-black transition"
+                        title="Chỉnh sửa"
+                  >
+                        <Edit className="w-5 h-5" />
+                  </button>
+                  <button
+                        onClick={() => handleDelete(album.albumId || album.id || album._id)}
+                        className="p-2 border rounded-full bg-white shadow-sm hover:bg-red-50 text-red-600 hover:text-red-800 transition"
+                        title="Xóa"
+                  >
+                        <Trash className="w-5 h-5" />
+                  </button>
+                  </div>
+                  </td>
+            </tr>
+            ))
+            )}
+      </tbody>
+      </table>
+      </div>
+
 
       <Pagination
         currentPage={currentPage}

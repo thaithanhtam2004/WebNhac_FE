@@ -130,77 +130,101 @@ export default function ManageSong() {
       </div>
 
       {/* Table */}
-      <div className="bg-white shadow rounded-xl overflow-x-auto">
-        <table className="min-w-full border border-gray-200">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 w-12">STT</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Tên bài hát</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Nghệ sĩ</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Thể loại</th>
-              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900">Ngày phát hành</th>
-              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900">Lượt nghe</th>
-              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900">Hành động</th>
-            </tr>
-          </thead>
+        <div className="bg-white shadow rounded-xl overflow-hidden border border-gray-200">
+        <div className="overflow-auto max-h-[70vh]">
+            <table className="table-fixed w-full border-collapse">
+            <thead className="bg-gray-100 sticky top-0 z-10">
+                <tr>
+                <th className="w-[60px] px-2 py-3 text-center text-sm font-semibold text-gray-900 border-b">STT</th>
+                <th className="w-[220px] px-3 py-3 text-left text-sm font-semibold text-gray-900 border-b">Tên bài hát</th>
+                <th className="w-[180px] px-3 py-3 text-left text-sm font-semibold text-gray-900 border-b">Nghệ sĩ</th>
+                <th className="w-[160px] px-3 py-3 text-left text-sm font-semibold text-gray-900 border-b">Thể loại</th>
+                <th className="w-[130px] px-3 py-3 text-center text-sm font-semibold text-gray-900 border-b">Ngày phát hành</th>
+                <th className="w-[120px] px-3 py-3 text-center text-sm font-semibold text-gray-900 border-b">Lượt nghe</th>
+                <th className="w-[150px] px-3 py-3 text-center text-sm font-semibold text-gray-900 border-b">Hành động</th>
+                </tr>
+            </thead>
 
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="7" className="text-center py-4 text-gray-600">Đang tải...</td>
-              </tr>
-            ) : error ? (
-              <tr>
-                <td colSpan="7" className="text-center py-4 text-red-500">{error}</td>
-              </tr>
-            ) : currentSongs.length === 0 ? (
-              <tr>
-                <td colSpan="7" className="text-center py-4 text-gray-600">Không có dữ liệu</td>
-              </tr>
-            ) : (
-              currentSongs.map((song, index) => (
-                <tr key={song.songId || index} className="border-t hover:bg-gray-50">
-                  <td className="px-4 py-3 text-center font-medium text-gray-700">{startIndex + index + 1}</td>
-                  <td className="px-6 py-3 text-gray-700">{song?.title || "—"}</td>
-                  <td className="px-6 py-3 text-gray-700">{song?.singerName || song?.singerId || "—"}</td>
-                  <td className="px-6 py-3 text-gray-700">{song?.genreName || song?.genreId || "—"}</td>
-                  <td className="px-6 py-3 text-center text-gray-700">{formatDate(song?.releaseDate)}</td>
-                  <td className="px-6 py-3 text-center text-gray-700">{formatNumber(song?.views)}</td>
-                  <td className="px-6 py-3">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        className="p-2 rounded-full bg-white border border-gray-300 shadow-sm hover:bg-blue-50 text-blue-600 hover:text-blue-800 transition"
-                        onClick={() => handleViewDetail(song)}
-                        title="Xem chi tiết"
-                      >
-                        <Eye className="w-5 h-5" />
-                      </button>
-                      <button
-                        className="p-2 rounded-full bg-white border border-gray-300 shadow-sm hover:bg-gray-100 text-gray-700 hover:text-black transition"
-                        onClick={() => {
-                          setIsEdit(true);
-                          setEditingSong(song);
-                          setIsFormOpen(true);
-                        }}
-                        title="Chỉnh sửa"
-                      >
-                        <Edit className="w-5 h-5" />
-                      </button>
-                      <button
-                        className="p-2 rounded-full bg-white border border-gray-300 shadow-sm hover:bg-red-50 text-red-600 hover:text-red-800 transition"
-                        onClick={() => handleDelete(song.songId)}
-                        title="Xóa"
-                      >
-                        <Trash className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+            <tbody>
+                {loading ? (
+                <tr>
+                    <td colSpan="7" className="text-center py-4 text-gray-600">Đang tải...</td>
+                </tr>
+                ) : error ? (
+                <tr>
+                    <td colSpan="7" className="text-center py-4 text-red-500">{error}</td>
+                </tr>
+                ) : currentSongs.length === 0 ? (
+                <tr>
+                    <td colSpan="7" className="text-center py-4 text-gray-600">Không có dữ liệu</td>
+                </tr>
+                ) : (
+                currentSongs.map((song, index) => (
+                    <tr
+                    key={song.songId || index}
+                    className="border-t hover:bg-gray-50 transition-colors"
+                    >
+                    <td className="px-2 py-3 text-center text-gray-700">
+                        {startIndex + index + 1}
+                    </td>
+
+                    <td className="px-3 py-3 text-gray-800 font-medium truncate overflow-hidden text-ellipsis whitespace-nowrap w-[220px]">
+                        {song?.title || "—"}
+                    </td>
+
+                    <td className="px-3 py-3 text-gray-700 truncate overflow-hidden text-ellipsis whitespace-nowrap w-[180px]">
+                        {song?.singerName || song?.singerId || "—"}
+                    </td>
+
+                    <td className="px-3 py-3 text-gray-700 truncate overflow-hidden text-ellipsis whitespace-nowrap w-[160px]">
+                        {song?.genreName || song?.genreId || "—"}
+                    </td>
+
+                    <td className="px-3 py-3 text-center text-gray-700 whitespace-nowrap w-[130px]">
+                        {formatDate(song?.releaseDate)}
+                    </td>
+
+                    <td className="px-3 py-3 text-center text-gray-700 whitespace-nowrap w-[120px]">
+                        {formatNumber(song?.views)}
+                    </td>
+
+                    <td className="px-3 py-3 w-[150px]">
+                        <div className="flex items-center justify-center gap-2">
+                        <button
+                            className="p-2 rounded-full bg-white border border-gray-300 shadow-sm hover:bg-blue-50 text-blue-600 hover:text-blue-800 transition"
+                            onClick={() => handleViewDetail(song)}
+                            title="Xem chi tiết"
+                        >
+                            <Eye className="w-5 h-5" />
+                        </button>
+                        <button
+                            className="p-2 rounded-full bg-white border border-gray-300 shadow-sm hover:bg-gray-100 text-gray-700 hover:text-black transition"
+                            onClick={() => {
+                            setIsEdit(true);
+                            setEditingSong(song);
+                            setIsFormOpen(true);
+                            }}
+                            title="Chỉnh sửa"
+                        >
+                            <Edit className="w-5 h-5" />
+                        </button>
+                        <button
+                            className="p-2 rounded-full bg-white border border-gray-300 shadow-sm hover:bg-red-50 text-red-600 hover:text-red-800 transition"
+                            onClick={() => handleDelete(song.songId)}
+                            title="Xóa"
+                        >
+                            <Trash className="w-5 h-5" />
+                        </button>
+                        </div>
+                    </td>
+                    </tr>
+                ))
+                )}
+            </tbody>
+            </table>
+        </div>
+        </div>
+
 
       {/* Pagination */}
       <Pagination
