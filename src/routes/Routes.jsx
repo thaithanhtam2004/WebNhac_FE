@@ -29,7 +29,7 @@ import Artists from "../components/pages/Admin/ManageArtist";
 import Genres from "../components/pages/Admin/ManageGenre";
 import Albums from "../components/pages/Admin/ManageAlbum";
 import Listeners from "../components/pages/Admin/ManageUser";
-
+import Features from "../components/pages/Admin/MangeSongFeature";
 import Profile from "../components/pages/User/Profile";
 
 const router = createBrowserRouter([
@@ -73,6 +73,7 @@ const router = createBrowserRouter([
       { path: "genres", element: <Genres /> },
       { path: "albums", element: <Albums /> },
       { path: "listeners", element: <Listeners /> },
+      { path: "features", element: <Features /> },
     ],
   },
 ]);

@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import { Clock, Play, Plus, Heart, Search } from "lucide-react";
 import { useGetSongByReleaseDate } from "../../../hooks/useGetSongByReleaseDate";
+import MusicPlayerBar from "../../elements/MusicPlayerBar";
 
 // Component tái sử dụng cho các nút icon, icon luôn trắng
-function ButtonIcon({ icon: Icon, bgColorClass, hoverColorClass }) {
+function ButtonIcon({ icon: Icon, bgColorClass, hoverColorClass, onClick }) {
   return (
-    <button className={`p-2 bg-${bgColorClass}/20 rounded-full hover:bg-${hoverColorClass}/40 transition`}>
+    <button
+      onClick={onClick}
+      className={`p-2 bg-${bgColorClass || "gray-800"}/20 rounded-full hover:bg-${hoverColorClass}/40 transition`}
+    >
       <Icon className="w-5 h-5 text-white" />
     </button>
   );
@@ -15,9 +19,14 @@ export default function LatestSongsPage() {
   const { data: latestSongs, loading, error } = useGetSongByReleaseDate();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredSongs = latestSongs?.filter((song) =>
-    song.title.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  // 🟢 State quản lý bài hát đang phát
+  const [currentTrack, setCurrentTrack] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const filteredSongs =
+    latestSongs?.filter((song) =>
+      song.title.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
 
   const formatDate = (isoString) => {
     const date = new Date(isoString);
@@ -45,7 +54,7 @@ export default function LatestSongsPage() {
     );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 relative min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -75,7 +84,7 @@ export default function LatestSongsPage() {
           <ul className="divide-y divide-gray-800">
             {filteredSongs.map((song) => (
               <li
-                key={song.id}
+                key={song.songId}
                 className="flex items-center justify-between py-3 px-2 hover:bg-[#2a2a2a] rounded-lg transition-all duration-200"
               >
                 <div className="flex items-center gap-4">
@@ -85,7 +94,9 @@ export default function LatestSongsPage() {
                     className="w-12 h-12 rounded-md object-cover"
                   />
                   <div>
-                    <p className="text-base font-semibold text-white">{song.title}</p>
+                    <p className="text-base font-semibold text-white">
+                      {song.title}
+                    </p>
                     <p className="text-sm text-gray-400">{song.artist}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       Nghe lần cuối: {formatDate(song.lastPlayed)}
@@ -93,17 +104,35 @@ export default function LatestSongsPage() {
                   </div>
                 </div>
 
-                {/* Nút thao tác với component ButtonIcon */}
+                {/* Nút thao tác */}
                 <div className="flex items-center gap-3">
-                  <ButtonIcon icon={Play}  hoverColorClass="cyan-500" />
+                  <ButtonIcon
+                    icon={Play}
+                    hoverColorClass="cyan-500"
+                    onClick={() => {
+                      console.log("Selected track:", song);
+                      console.log("Track URL:", song.fileUrl);
+                      setCurrentTrack(song);
+                      setIsPlaying(true);
+                    }}
+                  />
                   <ButtonIcon icon={Plus} hoverColorClass="pink-500" />
-                  <ButtonIcon icon={Heart}  hoverColorClass="red-500" />
+                  <ButtonIcon icon={Heart} hoverColorClass="red-500" />
                 </div>
               </li>
             ))}
           </ul>
         )}
       </div>
+
+      {/* 🟢 Thanh phát nhạc ở dưới */}
+      {currentTrack && (
+        <MusicPlayerBar
+          tracks={[currentTrack]}
+          isPlaying={isPlaying}
+          onPlayPause={setIsPlaying}
+        />
+      )}
     </div>
   );
 }
