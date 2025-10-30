@@ -5,7 +5,7 @@ import AdminLayout from "../components/layouts/AdminLayout";
 
 // Pages
 import HomePage from "../components/pages/HomePage/home";
-import RegisterPage from "../components/pages/RegisterPage";
+import RegisterPage from "../components/pages/Auth/RegisterPage";
 import Login from "../components/pages/Auth/Login";
 import ForgotPassword from "../components/pages/Auth/ForgotPassword";
 import FavoritesPage from "../components/pages/HomePage/FavoritesPage";
