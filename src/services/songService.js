@@ -11,3 +11,8 @@ export const getSongByReleaseDate= async()=>{
     const response = await axios.get(`${API_BASE}/all/latest`);
     return response.data.data;
 }
+
+export const getAllSongWithFeature = async () => {
+  const response = await axios.get(`${API_BASE}/with-feature/all`);
+  return response.data.data;
+};

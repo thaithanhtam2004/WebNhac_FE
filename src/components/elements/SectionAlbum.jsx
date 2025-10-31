@@ -1,6 +1,11 @@
 import React from "react";
 
-export default function SectionAlbum({ title, data = [], renderItem, headerRight }) {
+export default function SectionAlbum({
+  title,
+  data = [],
+  renderItem,
+  headerRight,
+}) {
   // Header chung
   const renderHeader = (
     <div className="flex justify-between items-center mb-4">
@@ -17,8 +22,8 @@ export default function SectionAlbum({ title, data = [], renderItem, headerRight
       </section>
     );
 
-  // Giới hạn tối đa 5 item
-  const limitedData = data.slice(0, 5);
+  // Hiển thị hết item
+  const limitedData = data;
 
   return (
     <section className="mb-10 px-8">

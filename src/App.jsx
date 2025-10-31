@@ -3,7 +3,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import HomePage from "./components/pages/HomePage/home";
-import RegisterPage from "./components/pages/RegisterPage";
+import RegisterPage from "./components/pages/Auth/RegisterPage";
 
 // function App() {
 //   return (
