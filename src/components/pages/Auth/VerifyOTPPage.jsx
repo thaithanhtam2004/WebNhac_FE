@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { verifyOTP } from "../../../services/authService";
 
 const VerifyOTPPage = () => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -7,15 +8,40 @@ const VerifyOTPPage = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const inputsRef = useRef([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // 👉 Ưu tiên lấy email từ state, nếu không có thì lấy từ URL
+  const searchParams = new URLSearchParams(location.search);
+  const emailFromQuery = searchParams.get("email");
+  const email = location.state?.email || emailFromQuery;
+
+  // ✅ Nếu vẫn không có email, báo lỗi ngay
+  if (!email) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen text-white text-center space-y-4">
+        <h2 className="text-2xl font-bold">❌ Thiếu thông tin email!</h2>
+        <p className="text-gray-400">
+          Vui lòng quay lại trang{" "}
+          <Link
+            to="/auth/forgot-password"
+            className="text-blue-400 underline hover:text-blue-300"
+          >
+            Quên mật khẩu
+          </Link>{" "}
+          và nhập lại email để lấy mã OTP mới.
+        </p>
+      </div>
+    );
+  }
 
   const handleChange = (value, index) => {
-    if (value.length > 1) return; // Chỉ cho phép 1 ký tự
-
+    if (value.length > 1) return;
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Auto focus ô tiếp theo
+    // Tự động focus ô kế tiếp
     if (value && index < 5) {
       inputsRef.current[index + 1]?.focus();
     }
@@ -38,33 +64,45 @@ const VerifyOTPPage = () => {
     setMessage("");
 
     const otpCode = otp.join("");
-    
     if (otpCode.length !== 6) {
-      setError("Vui lòng nhập đủ 6 số");
+      setError("Vui lòng nhập đủ 6 số OTP.");
       setLoading(false);
       return;
     }
 
-    // Gọi API xác thực OTP
-    setTimeout(() => {
-      setMessage("✅ Xác thực OTP thành công!");
+    try {
+      const res = await verifyOTP(email, otpCode);
+      setMessage(res.message || "✅ Xác thực OTP thành công!");
+      setTimeout(() => {
+        navigate(`/auth/reset-password?email=${email}&otp=${otpCode}`);
+      }, 1500);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "❌ OTP không hợp lệ hoặc đã hết hạn. Vui lòng thử lại."
+      );
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
-  const handleResend = () => {
-    setMessage("📧 Mã OTP mới đã được gửi!");
-    setError("");
+  const handleResend = async () => {
     setOtp(["", "", "", "", "", ""]);
+    setError("");
+    setMessage("📧 Mã OTP mới đã được gửi tới email của bạn!");
     inputsRef.current[0]?.focus();
   };
 
   return (
     <>
+      <h1 className="text-2xl font-semibold mb-6 text-white text-center">
+        NHẬP MÃ OTP
+      </h1>
 
-      <h1 className="text-2xl font-semibold mb-6 text-white">NHẬP MÃ OTP</h1>
-
-      <form className="flex flex-col space-y-6 w-full max-w-md" onSubmit={handleVerify}>
+      <form
+        className="flex flex-col space-y-6 w-full max-w-md mx-auto"
+        onSubmit={handleVerify}
+      >
         {error && (
           <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm text-center">
             {error}
@@ -110,6 +148,7 @@ const VerifyOTPPage = () => {
           <button
             type="button"
             onClick={handleResend}
+            disabled={loading}
             className="text-blue-400 hover:text-blue-300 font-medium hover:underline transition"
           >
             Gửi lại
