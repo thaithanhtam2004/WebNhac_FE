@@ -1,6 +1,7 @@
-import { Plus } from "lucide-react";
-import LikeButton from "./LikeButton";
+import React from "react";
 import PlayButton from "./playButton";
+import LikeButton from "./LikeButton";
+import AddToPlaylistButton from "./AddToPlaylistButton";
 
 export default function MusicCard({
   song,
@@ -8,8 +9,11 @@ export default function MusicCard({
   isPlaying,
   onPlay,
   onPause,
+  userId,
+  initialLiked,
+  onLikeChange,
 }) {
-  // ✅ Ngăn lỗi khi song chưa có
+  // Ngăn lỗi khi song chưa có
   if (!song) return null;
 
   const isCurrentSong = currentTrack?.songId === song?.songId;
@@ -20,10 +24,10 @@ export default function MusicCard({
       p-4 rounded-xl shadow-lg shadow-black/30 hover:scale-105 transition-transform 
       flex flex-col items-center text-center h-72 w-full"
     >
-      {/* Ảnh bài nhạc */}
+      {/* Ảnh bài nhạc + PlayButton */}
       <div className="relative w-40 h-40 bg-gray-800/70 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
         <PlayButton
-         variant="circle"
+          variant="circle"
           song={song}
           isCurrent={isCurrentSong}
           isPlaying={isPlaying}
@@ -44,13 +48,14 @@ export default function MusicCard({
 
       {/* Like + Add Playlist */}
       <div className="flex justify-center gap-6 text-base">
-        <LikeButton songId={song?.songId} />
-
-        <Plus
-          size={18}
-          className="cursor-pointer text-white hover:text-green-400 transition"
-          onClick={() => alert(`🎵 Đã thêm "${song?.title}" vào playlist`)}
+        <LikeButton
+          userId={userId}
+          songId={song.songId}
+          initialLiked={initialLiked}
+          onChange={onLikeChange}
         />
+
+        <AddToPlaylistButton song={song} />
       </div>
     </div>
   );

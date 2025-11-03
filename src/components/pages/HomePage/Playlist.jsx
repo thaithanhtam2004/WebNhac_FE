@@ -1,51 +1,85 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Play, Heart, ListPlus } from "lucide-react";
 import { toast } from "react-hot-toast";
+import AddToPlaylistButton from "../../elements/AddToPlaylistButton";
+import LikeButton from "../../elements/LikeButton";
+import PlayButton from "../../elements/playButton";
+import { useAuth } from "../../providers/AuthContext";
+import { usePlayer } from "../../providers/PlayerContext";
+import { getUserFavorites } from "../../../services/favoriteService";
+import { addHistorySong } from "../../../services/historyService";
 import { getPlaylistById, getSongsOfPlaylist } from "../../../services/playlistService";
 
 export default function PlaylistPage() {
-   // playlistId từ route
+  const { playlistId } = useParams();
+  const { user } = useAuth();
+  const { currentTrack, isPlaying, play, pause, audioRef } = usePlayer();
+
   const [playlist, setPlaylist] = useState(null);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { playlistId } = useParams();
+  const [favoriteIds, setFavoriteIds] = useState([]);
 
-useEffect(() => {
-  const fetchPlaylist = async () => {
-    setLoading(true);
-    try {
-      const playlistData = await getPlaylistById(playlistId); // dùng playlistId
-      setPlaylist(playlistData || null);
+  // Lấy playlist + bài hát
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const pl = await getPlaylistById(playlistId);
+        setPlaylist(pl || null);
 
-      const songsData = await getSongsOfPlaylist(playlistId);
-      setSongs(songsData || []);
-    } catch (err) {
-      console.error("Lỗi lấy chi tiết playlist hoặc bài hát:", err);
-      toast.error("Không thể tải playlist!");
-    } finally {
-      setLoading(false);
-    }
+        const songsData = await getSongsOfPlaylist(playlistId);
+        setSongs(songsData || []);
+      } catch (err) {
+        console.error("Lỗi tải playlist hoặc bài hát:", err);
+        toast.error("Không thể tải playlist!");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [playlistId]);
+
+  // Lấy danh sách favorite
+  useEffect(() => {
+    if (!user) return;
+    getUserFavorites(user.userId)
+      .then(f => setFavoriteIds(f.map(item => item.songId)))
+      .catch(console.error);
+  }, [user]);
+
+  // Lưu lịch sử nghe sau 1/3 thời lượng
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!currentTrack || !audio) return;
+
+    const handleTimeUpdate = () => {
+      if (!user) return;
+      if (audio.currentTime >= audio.duration / 3) {
+        addHistorySong({ userId: user.userId, songId: currentTrack.songId });
+        audio.removeEventListener("timeupdate", handleTimeUpdate);
+      }
+    };
+
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    return () => audio.removeEventListener("timeupdate", handleTimeUpdate);
+  }, [currentTrack, user, audioRef]);
+
+  const handlePlayAll = () => {
+    if (songs.length === 0) return;
+    play(songs[0]);
+    toast(`▶️ Đang phát tất cả: ${playlist.name}`, { icon: "🎵" });
   };
-  fetchPlaylist();
-}, [playlistId]);
 
-
-  if (loading)
-    return <p className="text-white text-center mt-10">Đang tải playlist...</p>;
-
-  if (!playlist)
-    return <p className="text-white text-center mt-10">Playlist không tồn tại.</p>;
-
-  const handlePlayAll = () => toast(`▶️ Đang phát tất cả: ${playlist.name}`, { icon: "🎵" });
-  const handlePlaySong = (song) => toast(`▶️ Đang phát: ${song.title}`, { icon: "🎵" });
+  if (loading) return <p className="text-white text-center mt-10">Đang tải playlist...</p>;
+  if (!playlist) return <p className="text-white text-center mt-10">Playlist không tồn tại.</p>;
 
   return (
     <div className="flex gap-6 p-6">
       {/* Cột trái: ảnh + info */}
       <div className="flex flex-col gap-4 w-64">
         <img
-          src={`https://picsum.photos/seed/${playlist.playlistId}/300/300`}
+          src={playlist.coverUrl || `/default-cover.jpg`}
           alt={playlist.name}
           className="w-full h-64 rounded-xl object-cover shadow-lg"
         />
@@ -74,25 +108,43 @@ useEffect(() => {
                 <div className="flex items-center gap-4">
                   <span className="w-6 text-gray-400">{index + 1}</span>
                   <img
-                    src={song.coverUrl || `https://picsum.photos/seed/${song.songId}/60/60`}
+                    src={song.coverUrl || `/default-cover.jpg`}
                     alt={song.title}
                     className="w-12 h-12 rounded-md object-cover"
                   />
                   <div>
                     <p className="text-base font-semibold text-white">{song.title}</p>
-                    <p className="text-sm text-gray-400">{song.artist}</p>
+                    <p className="text-sm text-gray-400">{song.singerName || song.artist}</p>
                   </div>
                 </div>
+
                 <div className="flex items-center gap-3">
-                  <Heart className="w-5 h-5 text-pink-500 cursor-pointer" />
-                  <ListPlus className="w-5 h-5 text-cyan-400 cursor-pointer" />
-                  <span className="text-gray-400">{song.duration}</span>
-                  <button
-                    onClick={() => handlePlaySong(song)}
-                    className="p-2 bg-cyan-500/20 rounded-full hover:bg-cyan-500/40 transition"
-                  >
-                    <Play className="w-5 h-5 text-cyan-400" />
-                  </button>
+                  {/* Play button giống LatestSongsPage */}
+                  <PlayButton
+                    variant="simple"
+                    song={song}
+                    isCurrent={currentTrack?.songId === song.songId}
+                    isPlaying={currentTrack?.songId === song.songId && isPlaying}
+                    onPlay={() => play(song)}
+                    onPause={() => pause()}
+                  />
+
+                  {/* Add to Playlist */}
+                  <AddToPlaylistButton song={song} />
+
+                  {/* Like button */}
+                  <LikeButton
+                    userId={user?.userId}
+                    songId={song.songId}
+                    initialLiked={favoriteIds.includes(song.songId)}
+                    onChange={(newLiked) =>
+                      setFavoriteIds(prev =>
+                        newLiked
+                          ? [...prev, song.songId]
+                          : prev.filter(id => id !== song.songId)
+                      )
+                    }
+                  />
                 </div>
               </li>
             ))}

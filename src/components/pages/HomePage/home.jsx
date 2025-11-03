@@ -90,14 +90,23 @@ export default function HomePage() {
         useFetchHook={useGetAllSong}
         renderItem={(song, index) =>
           index < 5 && (
-            <MusicCard
+<MusicCard
   song={song}
-  currentTrack={currentTrack}   // ✅ thêm dòng này
+  currentTrack={currentTrack}
   isPlaying={isPlaying && currentTrack?.songId === song.songId}
+  userId={user?.userId}
   initialLiked={favoriteSongs.includes(song.songId)}
+  onLikeChange={(newLiked) => {
+    if (newLiked) {
+      setFavoriteSongs(prev => [...prev, song.songId]);
+    } else {
+      setFavoriteSongs(prev => prev.filter(id => id !== song.songId));
+    }
+  }}
   onPlay={() => play(song)}
   onPause={pause}
 />
+
 
           )
         }
@@ -113,14 +122,23 @@ export default function HomePage() {
         title="MỚI PHÁT HÀNH"
         useFetchHook={useGetSongByReleaseDate}
         renderItem={(song) => (
-                    <MusicCard
+<MusicCard
   song={song}
-  currentTrack={currentTrack}   // ✅ thêm dòng này
+  currentTrack={currentTrack}
   isPlaying={isPlaying && currentTrack?.songId === song.songId}
+  userId={user?.userId}
   initialLiked={favoriteSongs.includes(song.songId)}
+  onLikeChange={(newLiked) => {
+    if (newLiked) {
+      setFavoriteSongs(prev => [...prev, song.songId]);
+    } else {
+      setFavoriteSongs(prev => prev.filter(id => id !== song.songId));
+    }
+  }}
   onPlay={() => play(song)}
   onPause={pause}
 />
+
 
         )}
         headerRight={

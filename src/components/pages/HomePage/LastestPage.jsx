@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Clock, Plus, Search } from "lucide-react";
+import { Clock, Search } from "lucide-react";
 import { useGetSongByReleaseDate } from "../../../hooks/useGetSongByReleaseDate";
 import LikeButton from "../../elements/LikeButton";
 import PlayButton from "../../elements/playButton";
+import AddToPlaylistButton from "../../elements/AddToPlaylistButton";
 import { useAuth } from "../../providers/AuthContext";
 import { getUserFavorites } from "../../../services/favoriteService";
 import { addHistorySong } from "../../../services/historyService";
-import { usePlayer } from "../../providers/PlayerContext"; // ✅ player global
+import { usePlayer } from "../../providers/PlayerContext";
 
 export default function LatestSongsPage() {
   const { data: latestSongs, loading, error } = useGetSongByReleaseDate();
@@ -15,10 +16,9 @@ export default function LatestSongsPage() {
   const { user } = useAuth();
   const [favoriteIds, setFavoriteIds] = useState([]);
 
-  // ✅ Lấy player global
   const { currentTrack, isPlaying, play, pause, audioRef } = usePlayer();
 
-  // ❤️ Lấy danh sách favorite
+  // Lấy danh sách favorite
   useEffect(() => {
     if (!user) return;
     getUserFavorites(user.userId)
@@ -26,7 +26,7 @@ export default function LatestSongsPage() {
       .catch(err => console.error("Lỗi lấy favorites:", err));
   }, [user]);
 
-  // 🟢 Lưu lịch sử nghe sau 1/3 thời lượng
+  // Lưu lịch sử nghe sau 1/3 thời lượng
   useEffect(() => {
     const audio = audioRef.current;
     if (!currentTrack) return;
@@ -66,7 +66,7 @@ export default function LatestSongsPage() {
 
   return (
     <div className="flex flex-col gap-6 relative min-h-screen p-4 sm:p-6 text-white">
-      
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -113,8 +113,6 @@ export default function LatestSongsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  
-                  {/* ✅ FIXED PlayButton */}
                   <PlayButton
                     variant="simple"
                     song={song}
@@ -124,12 +122,8 @@ export default function LatestSongsPage() {
                     onPause={() => pause()}
                   />
 
-                  <button
-                    className="p-2 hover:bg-green-600/30 rounded transition"
-                    onClick={() => alert(`🎵 Đã thêm "${song.title}" vào playlist`)}
-                  >
-                    <Plus className="w-5 h-5 text-white" />
-                  </button>
+                  {/* Nút thêm vào playlist */}
+                  <AddToPlaylistButton song={song} />
 
                   <LikeButton
                     userId={user?.userId}

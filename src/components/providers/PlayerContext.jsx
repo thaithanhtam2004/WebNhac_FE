@@ -1,4 +1,6 @@
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useContext, useRef, useState, useEffect } from "react";
+import { addHistorySong } from "../../services/historyService";
+import { useAuth } from "./AuthContext";
 
 const MusicPlayerContext = createContext();
 
@@ -7,13 +9,28 @@ export function MusicPlayerProvider({ children }) {
   const [currentTrack, setCurrentTrack] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const play = (track) => {
+  const { user } = useAuth();
+
+  // 🔹 Bật/tắt tính năng lưu lịch sử
+  // true = lưu sau 1 phút nghe
+  // false = bấm play là lưu ngay
+  const enableHistoryTracking = true;
+
+  const play = async (track) => {
     if (!track) return;
 
-    // Nếu bài mới -> set src mới
     if (!currentTrack || currentTrack.songId !== track.songId) {
       audioRef.current.src = track.fileUrl;
       setCurrentTrack(track);
+
+      // Nếu tắt tracking → lưu ngay
+      if (!enableHistoryTracking && user?.userId && track?.songId) {
+        try {
+          await addHistorySong({ userId: user.userId, songId: track.songId });
+        } catch (err) {
+          console.error("⚠️ Lỗi lưu lịch sử nghe:", err);
+        }
+      }
     }
 
     audioRef.current.play();
@@ -25,16 +42,37 @@ export function MusicPlayerProvider({ children }) {
     setIsPlaying(false);
   };
 
-  const value = {
-    currentTrack,
-    isPlaying,
-    play,     // ✅ export đúng tên
-    pause,
-    audioRef,
-  };
+  // 🔹 Lắng nghe timeupdate để lưu sau 1 phút
+  useEffect(() => {
+    if (!enableHistoryTracking) return;
+    if (!currentTrack || !user?.userId) return;
+
+    const audio = audioRef.current;
+
+    const handleTimeUpdate = () => {
+      if (audio.currentTime >= 5) { // ✅ 1 phút = 60 giây
+        addHistorySong({
+          userId: user.userId,
+          songId: currentTrack.songId,
+        }).catch(err => console.error("⚠️ Lỗi lưu lịch sử nghe:", err));
+
+        audio.removeEventListener("timeupdate", handleTimeUpdate);
+      }
+    };
+
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    return () => audio.removeEventListener("timeupdate", handleTimeUpdate);
+  }, [currentTrack, user, enableHistoryTracking]);
 
   return (
-    <MusicPlayerContext.Provider value={value}>
+    <MusicPlayerContext.Provider value={{
+      currentTrack,
+      isPlaying,
+      play,
+      pause,
+      audioRef,
+      enableHistoryTracking
+    }}>
       {children}
     </MusicPlayerContext.Provider>
   );
