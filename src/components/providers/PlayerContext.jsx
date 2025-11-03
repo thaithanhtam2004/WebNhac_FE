@@ -14,28 +14,35 @@ export function MusicPlayerProvider({ children }) {
   // 🔹 Bật/tắt tính năng lưu lịch sử
   // true = lưu sau 1 phút nghe
   // false = bấm play là lưu ngay
-  const enableHistoryTracking = true;
+  const enableHistoryTracking = false;
 
   const play = async (track) => {
-    if (!track) return;
+  if (!track) return;
 
-    if (!currentTrack || currentTrack.songId !== track.songId) {
-      audioRef.current.src = track.fileUrl;
-      setCurrentTrack(track);
+  console.log("Play track:", track, "user:", user);
 
-      // Nếu tắt tracking → lưu ngay
-      if (!enableHistoryTracking && user?.userId && track?.songId) {
+  if (!currentTrack || currentTrack.songId !== track.songId) {
+    audioRef.current.src = track.fileUrl;
+    setCurrentTrack(track);
+
+    if (!enableHistoryTracking) {
+      if (!user?.userId || !track?.songId) {
+        console.warn("Không lưu lịch sử: thiếu userId hoặc songId");
+      } else {
         try {
+          console.log("Gửi request lưu lịch sử:", { userId: user.userId, songId: track.songId });
           await addHistorySong({ userId: user.userId, songId: track.songId });
         } catch (err) {
           console.error("⚠️ Lỗi lưu lịch sử nghe:", err);
         }
       }
     }
+  }
 
-    audioRef.current.play();
-    setIsPlaying(true);
-  };
+  audioRef.current.play();
+  setIsPlaying(true);
+};
+
 
   const pause = () => {
     audioRef.current.pause();
