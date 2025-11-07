@@ -1,77 +1,75 @@
-import { useState, useEffect } from "react";
-import { Heart, Plus, Play } from "lucide-react";
-import { addFavorite, removeFavorite } from "../../services/favoriteService";
+import React from "react";
+import PlayButton from "./playButton";
+import LikeButton from "./LikeButton";
+import AddToPlaylistButton from "./AddToPlaylistButton";
 
 export default function MusicCard({
-  songId,
-  userId,          // có thể undefined nếu chưa login
-  title,
-  artist,
-  trackPath,
+  song,
+  currentTrack,
+  isPlaying,
   onPlay,
-  initialLiked = false,
+  onPause,
+  userId,
+  initialLiked,
+  onLikeChange,
 }) {
-  const [liked, setLiked] = useState(initialLiked);
+  // Ngăn lỗi khi song chưa có
+  if (!song) return null;
 
-  // Đồng bộ với prop initialLiked khi nó thay đổi
-  useEffect(() => {
-    setLiked(initialLiked);
-  }, [initialLiked]);
-
-  const handleLike = async () => {
-    if (!userId) {
-      alert("⚠️ Vui lòng đăng nhập để thêm bài hát vào yêu thích!");
-      return;
-    }
-
-    const newValue = !liked;
-    setLiked(newValue);
-
-    try {
-      if (newValue) {
-        await addFavorite(userId, songId);
-      } else {
-        await removeFavorite(userId, songId);
-      }
-    } catch (err) {
-      console.error("Lỗi khi cập nhật yêu thích:", err);
-      setLiked(!newValue); // rollback nếu lỗi
-    }
-  };
+  const isCurrentSong = currentTrack?.songId === song?.songId;
 
   return (
-    <div className="bg-gradient-to-br from-blue-600/40 via-purple-700/40 to-pink-600/40 
+    <div
+      className="bg-gradient-to-br from-blue-600/40 via-purple-700/40 to-pink-600/40 
       p-4 rounded-xl shadow-lg shadow-black/30 hover:scale-105 transition-transform 
-      flex flex-col items-center text-center h-72 w-full">
+      flex flex-col items-center text-center h-72 w-full"
+    >
+      {/* Ảnh bài nhạc + PlayButton */}
+      <div className="relative w-40 h-40 rounded-lg mb-3 flex items-center justify-center overflow-hidden bg-gray-800/70">
+        {/* Cover image */}
+        {song.coverUrl ? (
+          <img
+            src={song.coverUrl}
+            alt={song.title}
+            className="absolute w-full h-full object-cover rounded-lg"
+          />
+        ) : (
+          <div className="absolute w-full h-full bg-gray-700 rounded-lg flex items-center justify-center text-white text-xs">
+            Không có ảnh
+          </div>
+        )}
 
-      {/* Ảnh bài hát */}
-      <div className="relative w-40 h-40 bg-gray-800/70 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-        <button
-          onClick={onPlay}
-          className="absolute bg-white text-black rounded-full p-3 shadow-lg hover:scale-110 transition"
-        >
-          <Play size={20} />
-        </button>
+        {/* PlayButton luôn nằm trên cùng */}
+        <PlayButton
+          variant="circle"
+          song={song}
+          isCurrent={isCurrentSong}
+          isPlaying={isPlaying}
+          onPlay={onPlay}
+          onPause={onPause}
+        />
       </div>
 
-      {/* Tên và nghệ sĩ */}
+      {/* Thông tin bài hát */}
       <div className="flex flex-col items-center mb-3">
-        <p className="font-semibold text-white text-sm truncate w-32">{title}</p>
-        <p className="text-xs text-pink-200 truncate w-32">{artist}</p>
+        <p className="font-semibold text-white text-sm truncate w-32">
+          {song.title}
+        </p>
+        <p className="text-xs text-pink-200 truncate w-32">
+          {song.artist || "Unknown Artist"}
+        </p>
       </div>
 
-      {/* Nút yêu thích + thêm playlist */}
+      {/* Like + Add Playlist */}
       <div className="flex justify-center gap-6 text-base">
-        <Heart
-          size={18}
-          className={`cursor-pointer transition ${liked ? "text-red-400 fill-red-400" : "text-white hover:text-red-400"}`}
-          onClick={handleLike}
+        <LikeButton
+          userId={userId}
+          songId={song.songId}
+          initialLiked={initialLiked}
+          onChange={onLikeChange}
         />
-        <Plus
-          size={18}
-          className="cursor-pointer text-white hover:text-green-400 transition"
-          onClick={() => alert(`🎵 Đã thêm "${title}" vào playlist`)}
-        />
+
+        <AddToPlaylistButton song={song} />
       </div>
     </div>
   );
