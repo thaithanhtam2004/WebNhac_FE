@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+
 import { useParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../providers/AuthContext";
@@ -145,7 +146,25 @@ export default function AlbumPage() {
             ))}
           </ul>
         )}
+
       </div>
+
+      {/* Section gợi ý album khác */}
+      {albums.length > 1 && (
+        <Section
+          title="Album liên quan"
+          data={albums.filter((a) => a.albumId !== album.albumId)}
+          renderItem={(a) => (
+            <AlbumCard
+              key={a.albumId}
+              title={a.name}
+              artist={a.singerName || a.singerId}
+              cover={a.coverUrl}
+              onClick={() => navigate(`/albums/${a.albumId}`)} // click chuyển album
+            />
+          )}
+        />
+      )}
     </div>
   );
 }
