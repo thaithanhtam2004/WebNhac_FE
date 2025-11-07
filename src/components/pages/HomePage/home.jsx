@@ -10,6 +10,9 @@ import { getUserFavorites } from "../../../services/favoriteService";
 import MusicPlayerBar from "../../elements/MusicPlayerBar";
 import { useAuth } from "../../providers/AuthContext";
 import { LogOut } from "lucide-react";
+import { useGetHotTrendSong } from "../../../hooks/useGetHotTrendSong";
+import { useRecommendations } from "../../../hooks/useGetUserRecommendations";
+import SearchBar from "../../elements/SearchBar";
 
 // ✅ Import PlayerContext
 import { usePlayer } from "../../providers/PlayerContext";
@@ -20,9 +23,10 @@ export default function HomePage() {
   const [loadingAlbums, setLoadingAlbums] = useState(true);
   const [favoriteSongs, setFavoriteSongs] = useState([]);
 
+
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-
+  // const { songs: recommendedSongs, notifyTrackPlayed } = useRecommendations(user?.userId);
   // ✅ lấy album
   useEffect(() => {
     const fetchAlbums = async () => {
@@ -59,9 +63,19 @@ export default function HomePage() {
     fetchFavorites();
   }, [user]);
 
-  return (
-    <div className="flex flex-col w-full h-full text-white p-4 sm:p-6 overflow-y-auto">
+  const handleSelectSongFromSearch = (song) => {
+    console.log("Selected song from search:", song);
+    setCurrentTrack(song);
+    setIsPlaying(true);
+  };
 
+  return (
+    
+    <div className="flex flex-col w-full h-full text-white p-4 sm:p-6 overflow-y-auto">
+{/* SearchBar - sticky ở top */}
+      <div className="sticky top-0 z-50">
+        <SearchBar onSelectSong={handleSelectSongFromSearch} />
+      </div>
       {/* ✅ user info */}
       <div className="flex justify-end mb-4">
         {user ? (
@@ -84,7 +98,7 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* ✅ Section TẤT CẢ BÀI HÁT */}
+      {/* ✅ Section TẤT CẢ BÀI HÁT
       <Section
         title="TẤT CẢ BÀI HÁT"
         useFetchHook={useGetAllSong}
@@ -115,7 +129,69 @@ export default function HomePage() {
             Tất cả
           </Link>
         }
-      />
+      /> */}
+
+{user && (
+ <Section
+  title="GỢI Ý CHO BẠN"
+  useFetchHook={() => useRecommendations(user?.userId)}
+  renderItem={(song) => (
+    <MusicCard
+      key={song.songId}
+      song={song}
+      currentTrack={currentTrack}
+      isPlaying={isPlaying && currentTrack?.songId === song.songId}
+      userId={user.userId}
+      initialLiked={favoriteSongs.includes(song.songId)}
+      onLikeChange={(newLiked) => {
+        if (newLiked) setFavoriteSongs(prev => [...prev, song.songId]);
+        else setFavoriteSongs(prev => prev.filter(id => id !== song.songId));
+      }}
+      onPlay={() => {
+        play(song);
+        notifyTrackPlayed(song.songId);
+      }}
+      onPause={pause}
+    />
+  )}
+/>
+
+)}
+
+
+
+
+<Section
+  title="HOT TREND"
+  useFetchHook={useGetHotTrendSong}
+  renderItem={(song) => (
+    <MusicCard
+      song={song}
+      currentTrack={currentTrack}
+      isPlaying={isPlaying && currentTrack?.songId === song.songId}
+      userId={user?.userId}
+      initialLiked={favoriteSongs.includes(song.songId)}
+      onLikeChange={(newLiked) => {
+        if (newLiked) {
+          setFavoriteSongs(prev => [...prev, song.songId]);
+        } else {
+          setFavoriteSongs(prev => prev.filter(id => id !== song.songId));
+        }
+      }}
+      onPlay={() => play(song)}
+      onPause={pause}
+    />
+  )}
+  headerRight={
+    <Link
+      to="/hot-trend"
+      className="text-white hover:text-cyan-300 font-semibold text-sm transition"
+    >
+     
+    </Link>
+  }
+/>
+
 
       {/* ✅ Section: Mới phát hành */}
       <Section

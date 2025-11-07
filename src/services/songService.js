@@ -16,3 +16,8 @@ export const getAllSongWithFeature = async () => {
   const response = await axios.get(`${API_BASE}/with-feature/all`);
   return response.data.data;
 };
+
+export const getHotTrendSongs = async (limit = 10) => {
+  const response = await axios.get(`${API_BASE}/hotTrend?limit=${limit}`);
+  return response.data.data;
+};

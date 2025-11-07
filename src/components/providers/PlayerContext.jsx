@@ -1,6 +1,7 @@
 import { createContext, useContext, useRef, useState, useEffect } from "react";
 import { addHistorySong } from "../../services/historyService";
 import { useAuth } from "./AuthContext";
+import { socket } from "../../services/socket";  // đường dẫn đúng theo project bạn
 
 const MusicPlayerContext = createContext();
 
@@ -16,31 +17,39 @@ export function MusicPlayerProvider({ children }) {
   // false = bấm play là lưu ngay
   const enableHistoryTracking = false;
 
-  const play = async (track) => {
+const play = async (track) => {
   if (!track) return;
+
+  const audio = audioRef.current;
 
   console.log("Play track:", track, "user:", user);
 
+  // Nếu đổi bài
   if (!currentTrack || currentTrack.songId !== track.songId) {
-    audioRef.current.src = track.fileUrl;
+    audio.pause();              // ✅ đảm bảo reset
+    audio.src = track.fileUrl;
+    audio.load();               // ✅ bắt load bài mới
     setCurrentTrack(track);
 
-    if (!enableHistoryTracking) {
-      if (!user?.userId || !track?.songId) {
-        console.warn("Không lưu lịch sử: thiếu userId hoặc songId");
-      } else {
-        try {
-          console.log("Gửi request lưu lịch sử:", { userId: user.userId, songId: track.songId });
-          await addHistorySong({ userId: user.userId, songId: track.songId });
-        } catch (err) {
-          console.error("⚠️ Lỗi lưu lịch sử nghe:", err);
-        }
+    if (!enableHistoryTracking && user?.userId) {
+      try {
+        // ⬇️ Không await để không chặn play
+        addHistorySong({ userId: user.userId, songId: track.songId });
+
+        socket.emit("track_played", { userId: user.userId, songId: track.songId });
+        console.log("📤 Đã gửi socket track_played");
+      } catch (err) {
+        console.error("⚠️ Lỗi lưu lịch sử nghe:", err);
       }
     }
   }
 
-  audioRef.current.play();
-  setIsPlaying(true);
+  try {
+    await audio.play(); // ✅ play mượt
+    setIsPlaying(true);
+  } catch (e) {
+    console.warn("⚠️ Click lại để phát (auto-play bị chặn)");
+  }
 };
 
 

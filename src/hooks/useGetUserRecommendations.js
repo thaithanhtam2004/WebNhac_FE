@@ -1,31 +1,44 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect, useCallback } from "react";
+import { socket } from "../services/socket"; 
+import { getRecommendSongWithDetail } from "../services/recommendService";
 
-export function useGetUserRecommendations(userId, limit = 20) {
-  const [data, setData] = useState([]);
+export const useRecommendations = (userId) => {
+  const [data, setData] = useState([]);      // giống useGetHotTrendSong
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!userId) return; // nếu chưa có userId thì không fetch
-    setLoading(true);
-    setError(null);
+    if (!userId) return;
 
-    async function fetchRecommendations() {
+    socket.emit("register", { userId });
+
+    const load = async () => {
+      setLoading(true);
       try {
-        const res = await axios.get(
-          `http://localhost:3000/api/recommend/${userId}/details?limit=${limit}`
-        );
-        setData(res.data.data || []); // route /details trả { data: [...] }
+        const res = await getRecommendSongWithDetail(userId);
+        setData(res || []);
       } catch (err) {
-        setError(err.message || "Something went wrong");
+        console.error(err);
+        setError(err.message || "Lỗi khi lấy recommendation");
       } finally {
         setLoading(false);
       }
-    }
+    };
 
-    fetchRecommendations();
-  }, [userId, limit]);
+    load();
 
-  return { data, loading, error };
-}
+    const handleRealtime = (realtimeData) => {
+      setData(realtimeData.recommendations || []);
+    };
+
+    socket.on("recommendations", handleRealtime);
+    return () => socket.off("recommendations", handleRealtime);
+  }, [userId]);
+
+  const notifyTrackPlayed = useCallback((songId) => {
+    if (!userId || !songId) return;
+    socket.emit("track_played", { userId, songId });
+  }, [userId]);
+
+  return { data, loading, error, notifyTrackPlayed };
+};
