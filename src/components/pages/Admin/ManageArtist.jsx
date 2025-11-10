@@ -112,72 +112,104 @@ export default function ManageSinger() {
         
       </div>
 
-      {/* Table */}
-      <div className="bg-white shadow rounded-xl overflow-x-auto">
-        <table className="min-w-full border border-gray-200">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-3 text-center w-12 text-sm font-semibold text-gray-900">STT</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Tên nghệ sĩ</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Mô tả</th>
-              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900">Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="4" className="text-center py-4">Đang tải...</td>
-              </tr>
-            ) : error ? (
-              <tr>
-                <td colSpan="4" className="text-center py-4 text-red-500">{error}</td>
-              </tr>
-            ) : currentSingers.length === 0 ? (
-              <tr>
-                <td colSpan="4" className="text-center py-4 text-gray-600">Không có dữ liệu</td>
-              </tr>
-            ) : (
-              currentSingers.map((s, i) => (
-                <tr key={s.singerId || i} className="border-t hover:bg-gray-50">
-                  <td className="px-4 py-3 text-center text-gray-700">{startIndex + i + 1}</td>
-                  <td className="px-6 py-3 text-gray-800 font-medium">{s.name}</td>
-                  <td className="px-6 py-3 text-gray-600 text-sm">{truncateText(s.bio, 80)}</td>
-                  <td className="px-6 py-3">
-                    <div className="flex items-center justify-center gap-3">
-                      {/* Nút xem chi tiết */}
-                      <button
-                        className="p-2 rounded-full bg-white border border-gray-300 shadow-sm hover:bg-blue-50 text-blue-600 hover:text-blue-800 transition"
-                        onClick={() => handleViewDetail(s)}
-                        title="Xem chi tiết"
-                      >
-                        <Eye className="w-5 h-5" />
-                      </button>
-                      <button
-                        className="p-2 rounded-full bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 hover:text-black transition"
-                        onClick={() => {
-                          setIsEdit(true);
-                          setEditingSinger(s);
-                          setIsFormOpen(true);
-                        }}
-                        title="Chỉnh sửa"
-                      >
-                        <Edit className="w-5 h-5" />
-                      </button>
-                      <button
-                        className="p-2 rounded-full bg-white border border-gray-300 hover:bg-red-50 text-red-600 hover:text-red-800 transition"
-                        onClick={() => handleDelete(s.singerId)}
-                        title="Xóa"
-                      >
-                        <Trash className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+        {/* Table */}
+        <div className="bg-white shadow rounded-xl overflow-x-auto">
+        <table className="table-fixed min-w-full border border-gray-200">
+            <thead className="bg-gray-100">
+            <tr>
+                <th className="w-[60px] px-4 py-3 text-center text-sm font-semibold text-gray-900 border-b">
+                STT
+                </th>
+                <th className="w-[220px] px-6 py-3 text-left text-sm font-semibold text-gray-900 border-b">
+                Tên nghệ sĩ
+                </th>
+                <th className="w-[500px] px-6 py-3 text-left text-sm font-semibold text-gray-900 border-b">
+                Mô tả
+                </th>
+                <th className="w-[150px] px-6 py-3 text-center text-sm font-semibold text-gray-900 border-b">
+                Hành động
+                </th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {loading ? (
+                <tr>
+                <td colSpan="4" className="text-center py-4 text-gray-600">
+                    Đang tải...
+                </td>
+                </tr>
+            ) : error ? (
+                <tr>
+                <td colSpan="4" className="text-center py-4 text-red-500">
+                    {error}
+                </td>
+                </tr>
+            ) : currentSingers.length === 0 ? (
+                <tr>
+                <td colSpan="4" className="text-center py-4 text-gray-600">
+                    Không có dữ liệu
+                </td>
+                </tr>
+            ) : (
+                currentSingers.map((s, i) => (
+                <tr
+                    key={s.singerId || i}
+                    className="border-t hover:bg-gray-50 transition-colors"
+                >
+                    <td className="w-[60px] px-4 py-3 text-center text-gray-700">
+                    {startIndex + i + 1}
+                    </td>
+
+                    <td className="w-[220px] px-6 py-3 text-gray-800 font-medium truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                    {s.name}
+                    </td>
+
+                    <td className="w-[500px] px-6 py-3 text-gray-600 text-sm truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                    {truncateText(s.bio, 80)}
+                    </td>
+
+                    <td className="w-[150px] px-6 py-3">
+                    <div className="flex items-center justify-center gap-3">
+                        {/* Xem chi tiết */}
+                        <button
+                        className="p-2 rounded-full bg-white border border-gray-300 shadow-sm hover:bg-blue-50 text-blue-600 hover:text-blue-800 transition"
+                        onClick={() => handleViewDetail(s)}
+                        title="Xem chi tiết"
+                        >
+                        <Eye className="w-5 h-5" />
+                        </button>
+
+                        {/* Chỉnh sửa */}
+                        <button
+                        className="p-2 rounded-full bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 hover:text-black transition"
+                        onClick={() => {
+                            setIsEdit(true);
+                            setEditingSinger(s);
+                            setIsFormOpen(true);
+                        }}
+                        title="Chỉnh sửa"
+                        >
+                        <Edit className="w-5 h-5" />
+                        </button>
+
+                        {/* Xóa */}
+                        <button
+                        className="p-2 rounded-full bg-white border border-gray-300 hover:bg-red-50 text-red-600 hover:text-red-800 transition"
+                        onClick={() => handleDelete(s.singerId)}
+                        title="Xóa"
+                        >
+                        <Trash className="w-5 h-5" />
+                        </button>
+                    </div>
+                    </td>
+                </tr>
+                ))
+            )}
+            </tbody>
+        </table>
+        </div>
+
 
       {/* Pagination */}
       <Pagination

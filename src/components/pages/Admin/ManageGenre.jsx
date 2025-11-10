@@ -101,13 +101,13 @@ export default function ManageGenre() {
 
       {/* Table */}
       <div className="bg-white shadow rounded-xl overflow-x-auto">
-        <table className="min-w-full border border-gray-200">
+        <table className="table-fixed min-w-full border border-gray-200">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 w-12">STT</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Tên thể loại</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Mô tả</th>
-              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900">Hành động</th>
+              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 w-[6%]">STT</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 w-[25%]">Tên thể loại</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 w-[50%]">Mô tả</th>
+              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900 w-[19%]">Hành động</th>
             </tr>
           </thead>
 
@@ -127,11 +127,9 @@ export default function ManageGenre() {
             ) : (
               currentGenres.map((genre, index) => (
                 <tr key={genre.genreId || index} className="border-t hover:bg-gray-50">
-                  <td className="px-4 py-3 text-center font-medium text-gray-700">
-                    {startIndex + index + 1}
-                  </td>
-                  <td className="px-6 py-3 text-gray-700">{genre?.name || "—"}</td>
-                  <td className="px-6 py-3 text-gray-500">{genre?.description || "—"}</td>
+                  <td className="px-4 py-3 text-center font-medium text-gray-700 truncate">{startIndex + index + 1}</td>
+                  <td className="px-6 py-3 text-gray-700 truncate">{genre?.name || "—"}</td>
+                  <td className="px-6 py-3 text-gray-500 truncate">{genre?.description || "—"}</td>
                   <td className="px-6 py-3">
                     <div className="flex items-center justify-center gap-3">
                       <button
@@ -160,6 +158,7 @@ export default function ManageGenre() {
           </tbody>
         </table>
       </div>
+
 
       {/* Pagination */}
       <Pagination

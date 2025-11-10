@@ -365,29 +365,6 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
           {/* Album & Ngày phát hành */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block mb-1 text-sm text-gray-300">Album</label>
-              <Select
-                options={Array.isArray(albums) ? albums.map(a => ({ 
-                  value: a._id || a.albumId, 
-                  label: a.name 
-                })) : []}
-                styles={customSelectStyles}
-                value={
-                  albums.find(a => (a._id || a.albumId) === formData.albumId) 
-                    ? { 
-                        value: formData.albumId, 
-                        label: albums.find(a => (a._id || a.albumId) === formData.albumId).name 
-                      } 
-                    : null
-                }
-                onChange={opt => setFormData({ ...formData, albumId: opt ? opt.value : "" })}
-                placeholder="Chọn album (tuỳ chọn)..."
-                isClearable
-                isDisabled={isSubmitting}
-              />
-            </div>
-
-            <div>
               <label className="block mb-1 text-sm text-gray-300">
                 Ngày phát hành
               </label>

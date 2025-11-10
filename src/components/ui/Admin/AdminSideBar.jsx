@@ -10,20 +10,51 @@ import {
   LogOut,
   Menu,
   ChevronLeft,
+  Brain, // Icon mới cho Phân tích âm nhạc
 } from "lucide-react";
 
 export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
   const menuItems = [
-    { to: "/admin", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-    { to: "/admin/songs", label: "Quản lý bài hát", icon: <Music className="w-5 h-5" /> },
-    { to: "/admin/artists", label: "Quản lý nghệ sĩ", icon: <Users className="w-5 h-5" /> },
-    { to: "/admin/genres", label: "Quản lý thể loại", icon: <Tag className="w-5 h-5" /> },
-    { to: "/admin/albums", label: "Quản lý album", icon: <Disc className="w-5 h-5" /> },
-    { to: "/admin/listeners", label: "Quản lý người nghe", icon: <UserCircle2 className="w-5 h-5" /> },
+    { 
+      to: "/admin", 
+      label: "Dashboard", 
+      icon: <LayoutDashboard className="w-5 h-5" /> 
+    },
+    { 
+      to: "/admin/songs", 
+      label: "Quản lý bài hát", 
+      icon: <Music className="w-5 h-5" /> 
+    },
+    { 
+      to: "/admin/artists", 
+      label: "Quản lý nghệ sĩ", 
+      icon: <Users className="w-5 h-5" /> 
+    },
+    { 
+      to: "/admin/genres", 
+      label: "Quản lý thể loại", 
+      icon: <Tag className="w-5 h-5" /> 
+    },
+    { 
+      to: "/admin/albums", 
+      label: "Quản lý album", 
+      icon: <Disc className="w-5 h-5" /> 
+    },
+    { 
+      to: "/admin/listeners", 
+      label: "Quản lý người nghe", 
+      icon: <UserCircle2 className="w-5 h-5" /> 
+    },
+    { 
+      to: "/admin/features", 
+      label: "Quản lý tính năng bài hát", 
+      icon: <Brain className="w-5 h-5" />,
+    },
   ];
 
   const handleLogout = () => {
     console.log("Đăng xuất...");
+    // TODO: Implement logout logic
   };
 
   return (
@@ -83,8 +114,16 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
               }`
             }
           >
-            <div>{item.icon}</div>
-            {!isCollapsed && <span className="truncate">{item.label}</span>}
+            <div className="flex-shrink-0">{item.icon}</div>
+            {!isCollapsed && (
+              <span className="truncate flex-1">{item.label}</span>
+            )}
+            {/* Badge AI cho mục Phân tích âm nhạc */}
+            {!isCollapsed && item.badge && (
+              <span className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full">
+                {item.badge}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>
