@@ -3,31 +3,27 @@ import { Link, useNavigate } from "react-router-dom";
 import Section from "../../elements/Section";
 import MusicCard from "../../elements/MusicCard";
 import AlbumCard from "../../elements/AlbumCard";
+import SearchBar from "../../elements/SearchBar";
+import MusicPlayerBar from "../../elements/MusicPlayerBar";
 import { useGetAllSong } from "../../../hooks/useGetAllSong";
 import { useGetSongByReleaseDate } from "../../../hooks/useGetSongByReleaseDate";
-import { getAllAlbums } from "../../../services/albumService";
-import { getUserFavorites } from "../../../services/favoriteService";
-import MusicPlayerBar from "../../elements/MusicPlayerBar";
-import { useAuth } from "../../providers/AuthContext";
-import { LogOut } from "lucide-react";
 import { useGetHotTrendSong } from "../../../hooks/useGetHotTrendSong";
 import { useRecommendations } from "../../../hooks/useGetUserRecommendations";
-import SearchBar from "../../elements/SearchBar";
-
-// ✅ Import PlayerContext
+import { getAllAlbums } from "../../../services/albumService";
+import { getUserFavorites } from "../../../services/favoriteService";
+import { useAuth } from "../../providers/AuthContext";
 import { usePlayer } from "../../providers/PlayerContext";
+import { LogOut } from "lucide-react";
 
 export default function HomePage() {
   const { currentTrack, isPlaying, play, pause, audioRef } = usePlayer();
   const [albums, setAlbums] = useState([]);
   const [loadingAlbums, setLoadingAlbums] = useState(true);
   const [favoriteSongs, setFavoriteSongs] = useState([]);
-
-
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  // const { songs: recommendedSongs, notifyTrackPlayed } = useRecommendations(user?.userId);
-  // ✅ lấy album
+
+  // ✅ Lấy danh sách album
   useEffect(() => {
     const fetchAlbums = async () => {
       try {
@@ -49,7 +45,7 @@ export default function HomePage() {
     fetchAlbums();
   }, []);
 
-  // ✅ list bài hát yêu thích của user
+  // ✅ Lấy danh sách bài hát yêu thích
   useEffect(() => {
     if (!user) return;
     const fetchFavorites = async () => {
@@ -63,20 +59,19 @@ export default function HomePage() {
     fetchFavorites();
   }, [user]);
 
+  // ✅ Chọn bài hát từ SearchBar
   const handleSelectSongFromSearch = (song) => {
-    console.log("Selected song from search:", song);
-    setCurrentTrack(song);
-    setIsPlaying(true);
+    play(song);
   };
 
   return (
-    
     <div className="flex flex-col w-full h-full text-white p-4 sm:p-6 overflow-y-auto">
-{/* SearchBar - sticky ở top */}
+      {/* SearchBar - sticky ở top */}
       <div className="sticky top-0 z-50">
         <SearchBar onSelectSong={handleSelectSongFromSearch} />
       </div>
-      {/* ✅ user info */}
+
+      {/* ✅ User info */}
       <div className="flex justify-end mb-4">
         {user ? (
           <div className="flex items-center gap-3">
@@ -98,137 +93,102 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* ✅ Section TẤT CẢ BÀI HÁT
+      {/* ✅ Gợi ý cho bạn */}
+      {user && (
+        <Section
+          title="GỢI Ý CHO BẠN"
+          useFetchHook={() => useRecommendations(user?.userId)}
+          renderItem={(song) => (
+            <MusicCard
+              key={song.songId}
+              song={song}
+              currentTrack={currentTrack}
+              isPlaying={isPlaying && currentTrack?.songId === song.songId}
+              userId={user.userId}
+              initialLiked={favoriteSongs.includes(song.songId)}
+              onLikeChange={(newLiked) => {
+                if (newLiked)
+                  setFavoriteSongs((prev) => [...prev, song.songId]);
+                else
+                  setFavoriteSongs((prev) =>
+                    prev.filter((id) => id !== song.songId)
+                  );
+              }}
+              onPlay={() => play(song)}
+              onPause={pause}
+            />
+          )}
+        />
+      )}
+
+      {/* ✅ HOT TREND */}
       <Section
-        title="TẤT CẢ BÀI HÁT"
-        useFetchHook={useGetAllSong}
-        renderItem={(song, index) =>
-          index < 5 && (
-<MusicCard
-  song={song}
-  currentTrack={currentTrack}
-  isPlaying={isPlaying && currentTrack?.songId === song.songId}
-  userId={user?.userId}
-  initialLiked={favoriteSongs.includes(song.songId)}
-  onLikeChange={(newLiked) => {
-    if (newLiked) {
-      setFavoriteSongs(prev => [...prev, song.songId]);
-    } else {
-      setFavoriteSongs(prev => prev.filter(id => id !== song.songId));
-    }
-  }}
-  onPlay={() => play(song)}
-  onPause={pause}
-/>
+        title="HOT TREND"
+        useFetchHook={useGetHotTrendSong}
+        renderItem={(song) => (
+          <MusicCard
+            key={song.songId}
+            song={song}
+            currentTrack={currentTrack}
+            isPlaying={isPlaying && currentTrack?.songId === song.songId}
+            userId={user?.userId}
+            initialLiked={favoriteSongs.includes(song.songId)}
+            onLikeChange={(newLiked) => {
+              if (newLiked)
+                setFavoriteSongs((prev) => [...prev, song.songId]);
+              else
+                setFavoriteSongs((prev) =>
+                  prev.filter((id) => id !== song.songId)
+                );
+            }}
+            onPlay={() => play(song)}
+            onPause={pause}
+          />
+        )}
+      />
 
-
-          )
-        }
-        headerRight={
-          <Link to="/songs" className="text-white hover:text-cyan-300 font-semibold text-sm transition">
-            Tất cả
-          </Link>
-        }
-      /> */}
-
-{user && (
- <Section
-  title="GỢI Ý CHO BẠN"
-  useFetchHook={() => useRecommendations(user?.userId)}
-  renderItem={(song) => (
-    <MusicCard
-      key={song.songId}
-      song={song}
-      currentTrack={currentTrack}
-      isPlaying={isPlaying && currentTrack?.songId === song.songId}
-      userId={user.userId}
-      initialLiked={favoriteSongs.includes(song.songId)}
-      onLikeChange={(newLiked) => {
-        if (newLiked) setFavoriteSongs(prev => [...prev, song.songId]);
-        else setFavoriteSongs(prev => prev.filter(id => id !== song.songId));
-      }}
-      onPlay={() => {
-        play(song);
-        notifyTrackPlayed(song.songId);
-      }}
-      onPause={pause}
-    />
-  )}
-/>
-
-)}
-
-
-
-
-<Section
-  title="HOT TREND"
-  useFetchHook={useGetHotTrendSong}
-  renderItem={(song) => (
-    <MusicCard
-      song={song}
-      currentTrack={currentTrack}
-      isPlaying={isPlaying && currentTrack?.songId === song.songId}
-      userId={user?.userId}
-      initialLiked={favoriteSongs.includes(song.songId)}
-      onLikeChange={(newLiked) => {
-        if (newLiked) {
-          setFavoriteSongs(prev => [...prev, song.songId]);
-        } else {
-          setFavoriteSongs(prev => prev.filter(id => id !== song.songId));
-        }
-      }}
-      onPlay={() => play(song)}
-      onPause={pause}
-    />
-  )}
-  headerRight={
-    <Link
-      to="/hot-trend"
-      className="text-white hover:text-cyan-300 font-semibold text-sm transition"
-    >
-     
-    </Link>
-  }
-/>
-
-
-      {/* ✅ Section: Mới phát hành */}
+      {/* ✅ MỚI PHÁT HÀNH */}
       <Section
         title="MỚI PHÁT HÀNH"
         useFetchHook={useGetSongByReleaseDate}
         renderItem={(song) => (
-<MusicCard
-  song={song}
-  currentTrack={currentTrack}
-  isPlaying={isPlaying && currentTrack?.songId === song.songId}
-  userId={user?.userId}
-  initialLiked={favoriteSongs.includes(song.songId)}
-  onLikeChange={(newLiked) => {
-    if (newLiked) {
-      setFavoriteSongs(prev => [...prev, song.songId]);
-    } else {
-      setFavoriteSongs(prev => prev.filter(id => id !== song.songId));
-    }
-  }}
-  onPlay={() => play(song)}
-  onPause={pause}
-/>
-
-
+          <MusicCard
+            key={song.songId}
+            song={song}
+            currentTrack={currentTrack}
+            isPlaying={isPlaying && currentTrack?.songId === song.songId}
+            userId={user?.userId}
+            initialLiked={favoriteSongs.includes(song.songId)}
+            onLikeChange={(newLiked) => {
+              if (newLiked)
+                setFavoriteSongs((prev) => [...prev, song.songId]);
+              else
+                setFavoriteSongs((prev) =>
+                  prev.filter((id) => id !== song.songId)
+                );
+            }}
+            onPlay={() => play(song)}
+            onPause={pause}
+          />
         )}
         headerRight={
-          <Link to="/latest" className="text-white hover:text-cyan-300 font-semibold text-sm transition">
+          <Link
+            to="/latest"
+            className="text-white hover:text-cyan-300 font-semibold text-sm transition"
+          >
             Tất cả
           </Link>
         }
       />
 
-      {/* ✅ ALBUM */}
+      {/* ✅ ALBUM MỚI NHẤT */}
       <div className="mt-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">ALBUM MỚI NHẤT</h2>
-          <Link to="/albums" className="text-white hover:text-cyan-300 font-semibold text-sm transition">
+          <Link
+            to="/albums"
+            className="text-white hover:text-cyan-300 font-semibold text-sm transition"
+          >
             Tất cả
           </Link>
         </div>
@@ -240,7 +200,10 @@ export default function HomePage() {
         ) : (
           <div className="flex flex-wrap justify-between gap-4">
             {albums.slice(0, 5).map((album) => (
-              <div key={album.albumId} className="flex-1 min-w-[180px] max-w-[220px]">
+              <div
+                key={album.albumId}
+                className="flex-1 min-w-[180px] max-w-[220px]"
+              >
                 <AlbumCard
                   title={album.name}
                   artist={album.singerName}
@@ -258,8 +221,7 @@ export default function HomePage() {
         <MusicPlayerBar
           tracks={[currentTrack]}
           isPlaying={isPlaying}
-  onPlayPause={(state) => (state ? play(currentTrack) : pause())}
-
+          onPlayPause={(state) => (state ? play(currentTrack) : pause())}
           audioRef={audioRef}
         />
       )}
