@@ -123,33 +123,28 @@ export default function Dashboard() {
   // === Stats cards config ===
   const statsCards = [
     {
-      label: "Bài hát",
+      label: "Tổng số bài hát",
       value: stats.totalSongs,
-      icon: <Music className="w-8 h-8 text-indigo-500" />,
       color: "bg-indigo-100 text-indigo-700",
     },
     {
-      label: "Nghệ sĩ",
+      label: "Tổng số nghệ sĩ",
       value: stats.totalSingers,
-      icon: <User className="w-8 h-8 text-pink-500" />,
       color: "bg-pink-100 text-pink-700",
     },
     {
-      label: "Album",
+      label: "Tổng số album",
       value: stats.totalAlbums,
-      icon: <Album className="w-8 h-8 text-yellow-500" />,
       color: "bg-yellow-100 text-yellow-700",
     },
     {
-      label: "Thể loại",
+      label: "Tổng số thể loại",
       value: stats.totalGenres,
-      icon: <ListMusic className="w-8 h-8 text-green-500" />,
       color: "bg-green-100 text-green-700",
     },
     {
-      label: "Người dùng",
+      label: "Tổng số người dùng",
       value: stats.totalUsers,
-      icon: <Users className="w-8 h-8 text-blue-500" />,
       color: "bg-blue-100 text-blue-700",
     },
   ];
@@ -169,7 +164,6 @@ export default function Dashboard() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-800">Thống kê tổng quan</h1>
-        <p className="text-gray-600 mt-1">Tổng quan về hệ thống quản lý âm nhạc</p>
       </div>
 
       {/* Stats Cards */}
@@ -191,7 +185,6 @@ export default function Dashboard() {
         {/* Top Songs */}
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="flex items-center text-lg font-semibold text-gray-800 mb-4">
-            <TrendingUp className="w-5 h-5 text-indigo-500 mr-2" />
             Top Bài Hát Nhiều Lượt Nghe
           </h2>
           {topSongs.length === 0 ? (
@@ -216,7 +209,7 @@ export default function Dashboard() {
                       </p>
                     </div>
                   </div>
-                  <span className="font-bold text-indigo-600 ml-3 whitespace-nowrap">
+                  <span className="font-bold text-black ml-3 whitespace-nowrap">
                     {formatNumber(song.views)}
                   </span>
                 </li>
@@ -228,7 +221,6 @@ export default function Dashboard() {
         {/* Top Artists */}
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="flex items-center text-lg font-semibold text-gray-800 mb-4">
-            <User className="w-5 h-5 text-pink-500 mr-2" />
             Top Nghệ Sĩ
           </h2>
           {topArtists.length === 0 ? (
@@ -253,7 +245,7 @@ export default function Dashboard() {
                       </p>
                     </div>
                   </div>
-                  <span className="font-bold text-pink-600 ml-3 whitespace-nowrap">
+                  <span className="font-bold text-black ml-3 whitespace-nowrap">
                     {formatNumber(artist.listens)}
                   </span>
                 </li>
@@ -266,7 +258,6 @@ export default function Dashboard() {
       {/* Recently Added Songs */}
       <div className="bg-white rounded-xl shadow-md p-6">
         <h2 className="flex items-center text-lg font-semibold text-gray-800 mb-4">
-          <Clock className="w-5 h-5 text-green-500 mr-2" />
           Bài Hát Mới Thêm Gần Đây
         </h2>
         {recentSongs.length === 0 ? (
@@ -276,24 +267,14 @@ export default function Dashboard() {
             {recentSongs.map((song, idx) => (
               <li
                 key={song.songId || idx}
-                className="flex items-center justify-between py-3 px-2 hover:bg-gray-50 rounded-md transition-colors"
+                className="py-3 px-2 hover:bg-gray-50 rounded-md transition-colors"
               >
-                <div className="flex-1 min-w-0">
-                  <p className="text-gray-800 font-medium truncate">
-                    {song.title || "—"}
-                  </p>
-                  <p className="text-sm text-gray-500 truncate">
-                    {song.singerName || "—"}
-                  </p>
-                </div>
-                <div className="text-right ml-4">
-                  <span className="text-sm text-gray-400 block">
-                    {formatDate(song.releaseDate)}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {formatNumber(song.views)} lượt nghe
-                  </span>
-                </div>
+                <p className="text-gray-800 font-medium truncate">
+                  {song.title || "—"}
+                </p>
+                <p className="text-sm text-gray-500 truncate">
+                  {song.singerName || "—"}
+                </p>
               </li>
             ))}
           </ul>

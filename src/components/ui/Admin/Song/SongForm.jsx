@@ -24,10 +24,10 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
   const [albums, setAlbums] = useState([]);
 
   // Lyrics editor states
-  const [lyricTab, setLyricTab] = useState('edit'); // 'edit' | 'preview'
+  const [lyricTab, setLyricTab] = useState("edit"); // 'edit' | 'preview'
   const textareaRef = useRef(null);
 
-  // Fetch data from backend
+  // Fetch artists, genres, albums
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -50,20 +50,11 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
     fetchData();
   }, []);
 
-  // Load data when editing
+  // Load song data when editing
   useEffect(() => {
     if (isEdit && song) {
-      console.log("🔍 Song data nhận được:", song);
-      console.log("📝 Lyric value:", song.lyric);
-      console.log("📝 Lyrics value:", song.lyrics);
-      
-      let formattedDate = "";
-      if (song.releaseDate) {
-        formattedDate = String(song.releaseDate).substring(0, 10);
-      }
-
+      let formattedDate = song.releaseDate ? String(song.releaseDate).substring(0, 10) : "";
       const lyricValue = song.lyric || song.lyrics || "";
-      console.log("✅ Lyric sẽ hiển thị:", lyricValue ? `${lyricValue.length} ký tự` : "Rỗng");
 
       setFormData({
         title: song.title || "",
@@ -75,82 +66,72 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
         file: null,
         cover: null,
       });
+
       setMusicFileName("");
       setCoverFileName("");
-      
-      // Auto resize textarea sau khi load
+
+      // Auto resize textarea
       setTimeout(() => {
         if (textareaRef.current && lyricValue) {
-          textareaRef.current.style.height = 'auto';
-          textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 400) + 'px';
+          textareaRef.current.style.height = "auto";
+          textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 400) + "px";
         }
       }, 100);
     }
   }, [isEdit, song]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  // Handlers
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // Auto-resize textarea
   const handleLyricChange = (e) => {
     setFormData({ ...formData, lyric: e.target.value });
-    
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 400) + 'px';
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 400) + "px";
     }
   };
 
-  // Format lyrics
   const formatLyrics = () => {
     const formatted = formData.lyric
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.length > 0)
-      .join('\n\n');
-    
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .join("\n\n");
+
     setFormData({ ...formData, lyric: formatted });
-    
-    // Update textarea height
+
     setTimeout(() => {
       if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-        textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 400) + 'px';
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 400) + "px";
       }
     }, 0);
   };
 
-  // Import lyrics from file
   const handleLyricFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!file.name.endsWith('.txt')) {
+    if (!file.name.endsWith(".txt")) {
       onError?.("Chỉ chấp nhận file .txt");
       return;
     }
-    
+
     const reader = new FileReader();
     reader.onload = (event) => {
       setFormData({ ...formData, lyric: event.target.result });
-      setLyricTab('edit');
-      
-      // Update textarea height
+      setLyricTab("edit");
+
       setTimeout(() => {
         if (textareaRef.current) {
-          textareaRef.current.style.height = 'auto';
-          textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 400) + 'px';
+          textareaRef.current.style.height = "auto";
+          textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 400) + "px";
         }
       }, 0);
     };
-    reader.onerror = () => {
-      onError?.("Lỗi khi đọc file");
-    };
+    reader.onerror = () => onError?.("Lỗi khi đọc file");
     reader.readAsText(file);
-    
-    // Reset input
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const handleFileChange = (e) => {
@@ -158,7 +139,6 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
     if (!files[0]) return;
 
     setFormData({ ...formData, [name]: files[0] });
-
     if (name === "file") setMusicFileName(files[0].name);
     if (name === "cover") setCoverFileName(files[0].name);
   };
@@ -166,85 +146,38 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
-    if (!formData.title.trim()) {
-      onError?.("Vui lòng nhập tên bài hát!");
-      return;
-    }
-    if (!formData.singerId) {
-      onError?.("Vui lòng chọn nghệ sĩ!");
-      return;
-    }
-    if (!formData.genreId) {
-      onError?.("Vui lòng chọn thể loại!");
-      return;
-    }
-    if (!isEdit && !formData.file) {
-      onError?.("Vui lòng chọn file nhạc!");
-      return;
-    }
-
-    console.log("📤 Dữ liệu sẽ gửi:", formData);
-    console.log("📝 Lyric trước khi gửi:", formData.lyric);
-    console.log("📝 Lyric length:", formData.lyric?.length);
+    if (!formData.title.trim()) return onError?.("Vui lòng nhập tên bài hát!");
+    if (!formData.singerId) return onError?.("Vui lòng chọn nghệ sĩ!");
+    if (!formData.genreId) return onError?.("Vui lòng chọn thể loại!");
+    if (!isEdit && !formData.file) return onError?.("Vui lòng chọn file nhạc!");
 
     setIsSubmitting(true);
 
     try {
       const data = new FormData();
-      
-      // Add text fields
       data.append("title", formData.title.trim());
       data.append("singerId", formData.singerId);
       data.append("genreId", formData.genreId);
-      
-      if (formData.albumId) {
-        data.append("albumId", formData.albumId);
-      }
-
-      // ✅ QUAN TRỌNG: Luôn gửi lyric, kể cả khi rỗng
+      if (formData.albumId) data.append("albumId", formData.albumId);
       data.append("lyric", formData.lyric?.trim() || "");
-      console.log("✅ Đã append lyric:", formData.lyric?.trim() || "(rỗng)");
-
-      if (formData.releaseDate) {
-        data.append("releaseDate", formData.releaseDate);
-      }
-
-      // Add files
-      if (formData.file) {
-        data.append("file", formData.file);
-      }
-      if (formData.cover) {
-        data.append("cover", formData.cover);
-      }
-
-      // Debug FormData
-      console.log("📦 FormData entries:");
-      for (let pair of data.entries()) {
-        if (pair[0] === 'lyric') {
-          console.log(`  ${pair[0]}: ${pair[1].substring(0, 50)}...`);
-        } else if (pair[1] instanceof File) {
-          console.log(`  ${pair[0]}: [File] ${pair[1].name}`);
-        } else {
-          console.log(`  ${pair[0]}: ${pair[1]}`);
-        }
-      }
+      if (formData.releaseDate) data.append("releaseDate", formData.releaseDate);
+      if (formData.file) data.append("file", formData.file);
+      if (formData.cover) data.append("cover", formData.cover);
 
       if (isEdit) {
         await axios.put(`/songs/${song.songId || song._id}`, data, {
-          headers: { "Content-Type": "multipart/form-data" }
+          headers: { "Content-Type": "multipart/form-data" },
         });
         onSuccess?.("Cập nhật bài hát thành công!");
       } else {
         await axios.post("/songs", data, {
-          headers: { "Content-Type": "multipart/form-data" }
+          headers: { "Content-Type": "multipart/form-data" },
         });
         onSuccess?.("Thêm bài hát thành công!");
       }
       onClose();
     } catch (err) {
       console.error("❌ Submit error:", err);
-      console.error("❌ Error response:", err.response?.data);
       onError?.(err.response?.data?.message || "Lỗi khi lưu bài hát!");
     } finally {
       setIsSubmitting(false);
@@ -252,24 +185,24 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
   };
 
   const customSelectStyles = {
-    control: (base) => ({ 
-      ...base, 
-      backgroundColor: "#2a2a2a", 
-      borderColor: "#555", 
-      color: "white", 
-      borderRadius: 8 
-    }),
-    menu: (base) => ({ 
-      ...base, 
-      backgroundColor: "#2a2a2a", 
-      color: "white", 
-      zIndex: 9999 
-    }),
-    option: (base, state) => ({ 
-      ...base, 
-      backgroundColor: state.isFocused ? "#3a3a3a" : "#2a2a2a", 
+    control: (base) => ({
+      ...base,
+      backgroundColor: "#2a2a2a",
+      borderColor: "#555",
       color: "white",
-      cursor: "pointer"
+      borderRadius: 8,
+    }),
+    menu: (base) => ({
+      ...base,
+      backgroundColor: "#2a2a2a",
+      color: "white",
+      zIndex: 9999,
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isFocused ? "#3a3a3a" : "#2a2a2a",
+      color: "white",
+      cursor: "pointer",
     }),
     singleValue: (base) => ({ ...base, color: "white" }),
     placeholder: (base) => ({ ...base, color: "#aaa" }),
@@ -279,8 +212,9 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-[#1a1a1a] text-white rounded-2xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative">
-        <button 
-          onClick={onClose} 
+        {/* Close Button */}
+        <button
+          onClick={onClose}
           className="absolute top-3 right-3 text-gray-400 hover:text-white transition z-10"
           disabled={isSubmitting}
         >
@@ -316,20 +250,17 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
                 Nghệ sĩ <span className="text-red-500">*</span>
               </label>
               <Select
-                options={Array.isArray(artists) ? artists.map(a => ({ 
-                  value: a._id || a.singerId, 
-                  label: a.name 
-                })) : []}
+                options={artists.map((a) => ({ value: a._id || a.singerId, label: a.name }))}
                 styles={customSelectStyles}
                 value={
-                  artists.find(a => (a._id || a.singerId) === formData.singerId) 
-                    ? { 
-                        value: formData.singerId, 
-                        label: artists.find(a => (a._id || a.singerId) === formData.singerId).name 
-                      } 
+                  artists.find((a) => (a._id || a.singerId) === formData.singerId)
+                    ? {
+                        value: formData.singerId,
+                        label: artists.find((a) => (a._id || a.singerId) === formData.singerId).name,
+                      }
                     : null
                 }
-                onChange={opt => setFormData({ ...formData, singerId: opt ? opt.value : "" })}
+                onChange={(opt) => setFormData({ ...formData, singerId: opt ? opt.value : "" })}
                 placeholder="Chọn nghệ sĩ..."
                 isClearable
                 isDisabled={isSubmitting}
@@ -341,20 +272,17 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
                 Thể loại <span className="text-red-500">*</span>
               </label>
               <Select
-                options={Array.isArray(genres) ? genres.map(g => ({ 
-                  value: g._id || g.genreId, 
-                  label: g.name 
-                })) : []}
+                options={genres.map((g) => ({ value: g._id || g.genreId, label: g.name }))}
                 styles={customSelectStyles}
                 value={
-                  genres.find(g => (g._id || g.genreId) === formData.genreId) 
-                    ? { 
-                        value: formData.genreId, 
-                        label: genres.find(g => (g._id || g.genreId) === formData.genreId).name 
-                      } 
+                  genres.find((g) => (g._id || g.genreId) === formData.genreId)
+                    ? {
+                        value: formData.genreId,
+                        label: genres.find((g) => (g._id || g.genreId) === formData.genreId).name,
+                      }
                     : null
                 }
-                onChange={opt => setFormData({ ...formData, genreId: opt ? opt.value : "" })}
+                onChange={(opt) => setFormData({ ...formData, genreId: opt ? opt.value : "" })}
                 placeholder="Chọn thể loại..."
                 isClearable
                 isDisabled={isSubmitting}
@@ -362,44 +290,35 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
             </div>
           </div>
 
-          {/* Album & Ngày phát hành */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1 text-sm text-gray-300">
-                Ngày phát hành
-              </label>
-              <input
-                type="date"
-                name="releaseDate"
-                value={formData.releaseDate}
-                onChange={handleChange}
-                max={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-[#2a2a2a] text-white focus:ring-2 focus:ring-white focus:outline-none"
-                disabled={isSubmitting}
-              />
-            </div>
+          {/* Ngày phát hành */}
+          <div>
+            <label className="block mb-1 text-sm text-gray-300">Ngày phát hành</label>
+            <input
+              type="date"
+              name="releaseDate"
+              value={formData.releaseDate}
+              onChange={handleChange}
+              max={new Date().toISOString().split("T")[0]}
+              className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-[#2a2a2a] text-white focus:ring-2 focus:ring-white focus:outline-none"
+              disabled={isSubmitting}
+            />
           </div>
 
-          {/* Lời bài hát với Editor nâng cao */}
+          {/* Lời bài hát */}
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="text-sm text-gray-300">Lời bài hát</label>
-              <span className="text-xs text-gray-500">
-                {formData.lyric?.length || 0} ký tự
-              </span>
+              <span className="text-xs text-gray-500">{formData.lyric?.length || 0} ký tự</span>
             </div>
 
             {/* Toolbar */}
             <div className="flex gap-2 mb-2">
-              {/* Tab switcher */}
               <div className="flex gap-1 bg-[#2a2a2a] rounded-lg p-1">
                 <button
                   type="button"
-                  onClick={() => setLyricTab('edit')}
+                  onClick={() => setLyricTab("edit")}
                   className={`flex items-center gap-1 px-3 py-1 text-xs rounded transition ${
-                    lyricTab === 'edit' 
-                      ? 'bg-white text-black' 
-                      : 'text-gray-400 hover:text-white'
+                    lyricTab === "edit" ? "bg-white text-black" : "text-gray-400 hover:text-white"
                   }`}
                   disabled={isSubmitting}
                 >
@@ -408,11 +327,9 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
                 </button>
                 <button
                   type="button"
-                  onClick={() => setLyricTab('preview')}
+                  onClick={() => setLyricTab("preview")}
                   className={`flex items-center gap-1 px-3 py-1 text-xs rounded transition ${
-                    lyricTab === 'preview' 
-                      ? 'bg-white text-black' 
-                      : 'text-gray-400 hover:text-white'
+                    lyricTab === "preview" ? "bg-white text-black" : "text-gray-400 hover:text-white"
                   }`}
                   disabled={isSubmitting}
                 >
@@ -421,7 +338,6 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
                 </button>
               </div>
 
-              {/* Tools */}
               <button
                 type="button"
                 onClick={formatLyrics}
@@ -446,27 +362,22 @@ const SongForm = ({ isEdit = false, song = null, onClose, onSuccess, onError }) 
             </div>
 
             {/* Editor / Preview */}
-            {lyricTab === 'edit' ? (
+            {lyricTab === "edit" ? (
               <textarea
                 ref={textareaRef}
                 name="lyric"
                 value={formData.lyric}
                 onChange={handleLyricChange}
                 className="w-full min-h-[200px] max-h-[400px] px-3 py-2 rounded-lg border border-gray-700 bg-[#2a2a2a] text-white placeholder-gray-400 resize-none focus:ring-2 focus:ring-white focus:outline-none overflow-y-auto"
-                placeholder="Nhập lời bài hát...
-
-Ví dụ:
-[Verse 1]
-Dòng 1...
-Dòng 2...
-
-[Chorus]
-Điệp khúc..."
+                placeholder={`Nhập lời bài hát...\n\nVí dụ:\n[Verse 1]\nDòng 1...\nDòng 2...\n\n[Chorus]\nĐiệp khúc...`}
                 disabled={isSubmitting}
-                style={{ lineHeight: '1.6' }}
+                style={{ lineHeight: "1.6" }}
               />
             ) : (
-              <div className="w-full min-h-[200px] max-h-[400px] px-3 py-2 rounded-lg border border-gray-700 bg-[#2a2a2a] text-white whitespace-pre-wrap overflow-y-auto" style={{ lineHeight: '1.6' }}>
+              <div
+                className="w-full min-h-[200px] max-h-[400px] px-3 py-2 rounded-lg border border-gray-700 bg-[#2a2a2a] text-white whitespace-pre-wrap overflow-y-auto"
+                style={{ lineHeight: "1.6" }}
+              >
                 {formData.lyric || (
                   <span className="text-gray-500 italic">Chưa có lời bài hát...</span>
                 )}
@@ -483,11 +394,11 @@ Dòng 2...
               </label>
               <label className="flex items-center justify-center px-3 py-2 bg-white text-black hover:bg-gray-200 rounded-lg cursor-pointer text-sm transition">
                 Chọn file
-                <input 
-                  type="file" 
-                  name="file" 
-                  accept="audio/*" 
-                  className="hidden" 
+                <input
+                  type="file"
+                  name="file"
+                  accept="audio/*"
+                  className="hidden"
                   onChange={handleFileChange}
                   required={!isEdit}
                   disabled={isSubmitting}
@@ -501,7 +412,15 @@ Dòng 2...
               )}
               {isEdit && song?.fileUrl && !musicFileName && (
                 <p className="text-xs text-gray-400 mt-1 truncate">
-                  Nhạc hiện tại: <a href={song.fileUrl} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">Nghe nhạc</a>
+                  Nhạc hiện tại:{" "}
+                  <a
+                    href={song.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-400 hover:underline"
+                  >
+                    Nghe nhạc
+                  </a>
                 </p>
               )}
             </div>
@@ -511,11 +430,11 @@ Dòng 2...
               <label className="block mb-1 text-sm text-gray-300">Ảnh bìa</label>
               <label className="flex items-center justify-center px-3 py-2 bg-white text-black hover:bg-gray-200 rounded-lg cursor-pointer text-sm transition">
                 Chọn ảnh
-                <input 
-                  type="file" 
-                  name="cover" 
-                  accept="image/*" 
-                  className="hidden" 
+                <input
+                  type="file"
+                  name="cover"
+                  accept="image/*"
+                  className="hidden"
                   onChange={handleFileChange}
                   disabled={isSubmitting}
                 />
@@ -528,7 +447,15 @@ Dòng 2...
               )}
               {isEdit && song?.coverUrl && !coverFileName && (
                 <p className="text-xs text-gray-400 mt-1 truncate">
-                  Ảnh hiện tại: <a href={song.coverUrl} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">Xem ảnh</a>
+                  Ảnh hiện tại:{" "}
+                  <a
+                    href={song.coverUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-400 hover:underline"
+                  >
+                    Xem ảnh
+                  </a>
                 </p>
               )}
             </div>
@@ -536,20 +463,20 @@ Dòng 2...
 
           {/* Buttons */}
           <div className="flex justify-end gap-3 pt-4">
-            <button 
-              type="button" 
-              onClick={onClose} 
+            <button
+              type="button"
+              onClick={onClose}
               className="px-4 py-2 rounded-lg border border-gray-600 hover:bg-gray-800 text-white transition"
               disabled={isSubmitting}
             >
               Hủy
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="px-4 py-2 rounded-lg bg-white text-black hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Đang xử lý..." : (isEdit ? "Lưu" : "Thêm")}
+              {isSubmitting ? "Đang xử lý..." : isEdit ? "Lưu" : "Thêm"}
             </button>
           </div>
         </form>

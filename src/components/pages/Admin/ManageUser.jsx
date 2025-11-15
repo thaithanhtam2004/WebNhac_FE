@@ -1,4 +1,3 @@
-// src/components/pages/Admin/ManageUser.jsx
 import { useState, useEffect } from "react";
 import { Lock, Unlock } from "lucide-react";
 import Pagination from "../../elements/Pagination";
@@ -147,7 +146,9 @@ export default function ManageUser() {
                   </td>
                   <td className="text-center px-6 py-3">
                     <button
-                      onClick={() => handleToggleStatus(user.userId, user.isActive)}
+                      onClick={() =>
+                        handleToggleStatus(user.userId, user.isActive)
+                      }
                       className={`p-2 rounded-full border transition ${
                         user.isActive
                           ? "text-red-600 border-red-300 hover:bg-red-50"
@@ -170,7 +171,6 @@ export default function ManageUser() {
           </tbody>
         </table>
       </div>
-
 
       {/* Pagination */}
       <Pagination
