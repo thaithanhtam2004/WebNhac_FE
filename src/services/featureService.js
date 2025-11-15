@@ -32,3 +32,20 @@ export async function getFeatureBySongId(songId) {
     throw err.response?.data || { message: "Không thể lấy feature" };
   }
 }
+
+export async function predictSongEmotion(songId, file) {
+  try {
+    const formData = new FormData();
+    formData.append("songId", songId); // 🟢 thêm dòng này
+    formData.append("file", file);
+
+    const res = await axios.post(`${BASE_URL}/predict-emotion`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    return res.data; // { success, emotion, features, ... }
+  } catch (err) {
+    console.error("❌ Lỗi dự đoán cảm xúc:", err);
+    throw err.response?.data || { message: "Dự đoán cảm xúc thất bại" };
+  }
+}
