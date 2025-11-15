@@ -30,7 +30,7 @@ import Albums from "../components/pages/Admin/ManageAlbum";
 import Listeners from "../components/pages/Admin/ManageUser";
 import Features from "../components/pages/Admin/MangeSongFeature";
 import Profile from "../components/pages/User/Profile";
-
+import ClassifySongEmotion from "../components/pages/Admin/ClassifySongEmotion";
 const router = createBrowserRouter([
   // 🔹 Auth routes
   {
@@ -75,6 +75,7 @@ const router = createBrowserRouter([
       { path: "albums", element: <Albums /> },
       { path: "listeners", element: <Listeners /> },
       { path: "features", element: <Features /> },
+      { path: "classify", element: <ClassifySongEmotion /> },
     ],
   },
 ]);

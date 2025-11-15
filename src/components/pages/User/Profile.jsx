@@ -4,8 +4,8 @@ import { LogOut } from "lucide-react";
 const Profile = () => {
   // Dữ liệu giả
   const user = {
-    tennguoidung: "Sinusie",
-    email: "8tmsusie@gmail.com",
+    tennguoidung: "thuyen",
+    email: "cus@gmail.com",
   };
 
   const handleChangePassword = () => {
@@ -43,14 +43,7 @@ const Profile = () => {
       </div>
 
       {/* Các nút thao tác khác */}
-      <div className="space-y-3">
-        <button
-          onClick={handleChangePassword}
-          className="px-4 py-2 bg-white text-black rounded-lg font-semibold hover:bg-gray-200 transition"
-        >
-          Đổi mật khẩu
-        </button>
-      </div>
+     
     </div>
   );
 };

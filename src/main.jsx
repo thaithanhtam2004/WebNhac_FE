@@ -4,12 +4,16 @@ import { RouterProvider } from "react-router-dom";
 import router from "./routes/Routes.jsx";
 import "./index.css";
 import { AuthProvider } from "./components/providers/AuthContext";
+import { MusicPlayerProvider } from "./components/providers/PlayerContext";
+
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    {/* ✅ Bọc toàn bộ ứng dụng trong AuthProvider */}
-    <AuthProvider>
+<React.StrictMode>
+  <AuthProvider>
+    <MusicPlayerProvider>
       <RouterProvider router={router} />
-    </AuthProvider>
-  </React.StrictMode>
+    </MusicPlayerProvider>
+  </AuthProvider>
+</React.StrictMode>
+
 );

@@ -1,67 +1,98 @@
-import React, { useState } from "react";
-import { Heart, Play, Plus } from "lucide-react";
-import FavoriteSearchBar from "../../elements/FavoriteSearchBar";
+import React, { useState, useEffect } from "react";
+import { Search } from "lucide-react";
+import { useAuth } from "../../providers/AuthContext";
+import { usePlayer } from "../../providers/PlayerContext";
+import { getUserFavorites } from "../../../services/favoriteService";
+import LikeButton from "../../elements/LikeButton";
+import PlayButton from "../../elements/playButton";
+import AddToPlaylistButton from "../../elements/AddToPlaylistButton";
 
 export default function FavoritesPage() {
+  const { user } = useAuth();
+  const { currentTrack, isPlaying, play, pause } = usePlayer();
+
   const [searchTerm, setSearchTerm] = useState("");
+  const [favoriteSongs, setFavoriteSongs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [favoriteIds, setFavoriteIds] = useState([]);
 
-  // 🔹 Dữ liệu mẫu
-  const favoriteSongs = Array.from({ length: 40 }, (_, i) => ({
-    id: i + 1,
-    title: `Bài hát ${i + 1}`,
-    artist: ["Sơn Tùng M-TP", "Đen Vâu", "Hoàng Thùy Linh", "Jack", "Min"][
-      Math.floor(Math.random() * 5)
-    ],
-    cover: `https://picsum.photos/seed/song${i}/80/80`,
-  }));
+  // 🔹 Load danh sách bài hát yêu thích
+  useEffect(() => {
+    if (!user?.userId) return;
+    const fetchFavorites = async () => {
+      try {
+        const data = await getUserFavorites(user.userId);
+        setFavoriteSongs(data);
+        setFavoriteIds(data.map((s) => s.songId));
+      } catch (err) {
+        console.error("Lỗi lấy danh sách yêu thích:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFavorites();
+  }, [user]);
 
-  // 🔍 Lọc danh sách
-  const filteredSongs = favoriteSongs.filter((song) =>
-    song.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredSongs =
+    favoriteSongs?.filter((song) =>
+      song.title.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
 
-  const handleAddToPlaylist = (song) => {
-    console.log(`🎵 Đã thêm "${song.title}" vào playlist!`);
-    alert(`Đã thêm "${song.title}" vào playlist 🎶`);
-  };
+  if (!user)
+    return (
+      <p className="text-gray-400 text-center py-10">
+        Vui lòng đăng nhập để xem bài hát yêu thích.
+      </p>
+    );
+
+  if (loading)
+    return (
+      <p className="text-gray-400 text-center py-10">
+        Đang tải danh sách yêu thích...
+      </p>
+    );
 
   return (
-    <div className="flex flex-col gap-6 h-full">
+    <div className="flex flex-col gap-6 relative min-h-screen p-4 sm:p-6 text-white">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold flex items-center gap-3 text-pink-400">
-          <Heart className="w-7 h-7 text-pink-400" />
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold flex items-center gap-3 text-white">
           Bài hát yêu thích
         </h1>
 
-        {/* Thanh tìm kiếm */}
-        <FavoriteSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        {/* Search */}
+        <div className="relative w-80">
+          <input
+            type="text"
+            placeholder="Tìm kiếm bài hát..."
+            className="w-full bg-[#1e1e1e] border border-gray-700 rounded-lg py-2 pl-10 pr-4 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+        </div>
       </div>
 
-      {/* Danh sách bài hát */}
-      <div className="bg-[#1a1a1a] rounded-xl p-4 shadow-inner shadow-black/30 max-h-[520px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+      {/* Song list */}
+      <div className="bg-[#1a1a1a] rounded-xl p-4 shadow-inner shadow-black/40 max-h-[520px] overflow-y-auto">
         {filteredSongs.length === 0 ? (
           <p className="text-gray-400 text-center py-10">
-            Không tìm thấy bài hát nào.
+            Không có bài hát yêu thích.
           </p>
         ) : (
           <ul className="divide-y divide-gray-700">
             {filteredSongs.map((song) => (
               <li
-                key={song.id}
-                className="group flex items-center justify-between gap-4 py-3 px-3 rounded-lg hover:bg-[#2a2a2a] transition-all duration-300 relative"
+                key={song.songId}
+                className="flex items-center justify-between gap-4 py-3 px-3 rounded-lg hover:bg-[#2a2a2a] transition-all duration-300"
               >
                 {/* Ảnh bìa */}
-                <div className="relative w-14 h-14 flex-shrink-0">
+                <div className="w-14 h-14 flex-shrink-0">
                   <img
-                    src={song.cover}
+                    src={song.coverUrl || "/default-cover.jpg"}
                     alt={song.title}
                     className="w-full h-full rounded-md object-cover"
                   />
-                  {/* Nút play xuất hiện khi hover */}
-                  <button className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-md">
-                    <Play className="w-6 h-6 text-white" />
-                  </button>
                 </div>
 
                 {/* Thông tin bài hát */}
@@ -69,18 +100,47 @@ export default function FavoritesPage() {
                   <p className="text-base font-semibold text-white truncate">
                     {song.title}
                   </p>
-                  <p className="text-sm text-gray-400 truncate">{song.artist}</p>
+                  <p className="text-sm text-gray-400 truncate">
+                    {song.singerName || song.artist}
+                  </p>
                 </div>
 
-                {/* Khu vực nút điều khiển */}
-                <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                  <button
-                    onClick={() => handleAddToPlaylist(song)}
-                    className="p-2 rounded-lg bg-pink-500/20 hover:bg-pink-500/40 transition-all duration-300"
-                  >
-                    <Plus className="w-5 h-5 text-pink-400" />
-                  </button>
-                  <Heart className="w-5 h-5 text-pink-500" />
+                {/* Nút điều khiển */}
+                <div className="flex items-center gap-3">
+                  {/* PlayButton */}
+                  <PlayButton
+                    variant="simple"
+                    song={song}
+                    isCurrent={currentTrack?.songId === song.songId}
+                    isPlaying={currentTrack?.songId === song.songId && isPlaying}
+                    onPlay={() =>
+                      play({
+                        songId: song.songId,
+                        title: song.title,
+                        artist: song.singerName || song.artist,
+                        fileUrl: song.fileUrl,
+                        coverUrl: song.coverUrl || "/default-cover.jpg",
+                      })
+                    }
+                    onPause={pause}
+                  />
+
+                  {/* Thêm vào playlist */}
+                  <AddToPlaylistButton song={song} />
+
+                  {/* LikeButton */}
+                  <LikeButton
+                    userId={user?.userId}
+                    songId={song.songId}
+                    initialLiked={favoriteIds.includes(song.songId)}
+                    onChange={(newLiked) =>
+                      setFavoriteIds((prev) =>
+                        newLiked
+                          ? [...prev, song.songId]
+                          : prev.filter((id) => id !== song.songId)
+                      )
+                    }
+                  />
                 </div>
               </li>
             ))}

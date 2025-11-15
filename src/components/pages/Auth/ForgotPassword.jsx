@@ -1,12 +1,14 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { sendForgotPassword } from "../../../services/authService";
+import { Link, useNavigate } from "react-router-dom";
+// 🔄 Đổi import này
+import { sendOTP } from "../../../services/authService";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,10 +17,20 @@ const ForgotPasswordPage = () => {
     setMessage("");
 
     try {
-      const res = await sendForgotPassword(email);
-      setMessage(res.message || "✅ Mã OTP đã được gửi về email!");
+      // 🔄 Gọi đúng hàm mới
+      const res = await sendOTP(email);
+
+      if (res.success) {
+        setMessage(res.message || "✅ OTP đã được gửi đến email của bạn!");
+        // Chuyển hướng đến trang xác minh OTP sau 2 giây
+        setTimeout(() => {
+          navigate(`/auth/verify-otp?email=${encodeURIComponent(email)}`);
+        }, 2000);
+      } else {
+        setError(res.message || "Không thể gửi OTP. Vui lòng thử lại.");
+      }
     } catch (err) {
-      setError(err.response?.data?.message || "Lỗi gửi OTP");
+      setError("Lỗi kết nối server hoặc email không hợp lệ.");
     } finally {
       setLoading(false);
     }
@@ -26,10 +38,12 @@ const ForgotPasswordPage = () => {
 
   return (
     <>
+      <h1 className="text-xl font-semibold mb-4 text-white">QUÊN MẬT KHẨU</h1>
 
-      <h1 className="text-2xl font-semibold mb-6 text-white">QUÊN MẬT KHẨU</h1>
-
-      <form className="flex flex-col space-y-5 w-full max-w-md" onSubmit={handleSubmit}>
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col space-y-5 w-full max-w-md"
+      >
         {error && (
           <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm text-center">
             {error}
@@ -64,7 +78,7 @@ const ForgotPasswordPage = () => {
               : "bg-white hover:bg-gray-200 text-black shadow-lg hover:shadow-xl"
           }`}
         >
-          {loading ? "Đang gửi..." : "Gửi yêu cầu"}
+          {loading ? "Đang gửi OTP..." : "Gửi OTP"}
         </button>
       </form>
 
