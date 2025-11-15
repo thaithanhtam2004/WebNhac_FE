@@ -7,7 +7,7 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
   const [formData, setFormData] = useState({
     name: "",
     singerId: "",
-    year: "", // ✅ Chỉ lưu năm
+    year: "",
     description: "",
     coverUrl: null,
   });
@@ -31,10 +31,9 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
     fetchSingers();
   }, []);
 
-  // 🔹 Load dữ liệu khi edit
+  // 🔹 Load dữ liệu khi chỉnh sửa
   useEffect(() => {
     if (isEdit && album) {
-      // ✅ Lấy năm từ releaseDate nếu có
       let year = "";
       if (album.releaseDate) {
         year = new Date(album.releaseDate).getFullYear().toString();
@@ -43,7 +42,7 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
       setFormData({
         name: album.name || "",
         singerId: album.singerId || "",
-        year: year,
+        year,
         description: album.description || "",
         coverUrl: null,
       });
@@ -63,11 +62,10 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validation
+
     if (!formData.name.trim()) return onError?.("Vui lòng nhập tên album!");
     if (!formData.singerId) return onError?.("Vui lòng chọn ca sĩ!");
-    
+
     // ✅ Validate năm
     if (formData.year) {
       const year = parseInt(formData.year);
@@ -80,12 +78,11 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
     const data = new FormData();
     data.append("name", formData.name.trim());
     data.append("singerId", formData.singerId);
-    
-    // ✅ Gửi năm dưới dạng releaseDate (01/01/năm đó)
+
     if (formData.year) {
       data.append("releaseDate", `${formData.year}-01-01`);
     }
-    
+
     if (formData.description) data.append("description", formData.description.trim());
     if (formData.coverUrl) data.append("cover", formData.coverUrl);
 
@@ -112,24 +109,24 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
   };
 
   const customSelectStyles = {
-    control: (base) => ({ 
-      ...base, 
-      backgroundColor: "#2a2a2a", 
-      borderColor: "#555", 
-      color: "white", 
-      borderRadius: 8 
-    }),
-    menu: (base) => ({ 
-      ...base, 
-      backgroundColor: "#2a2a2a", 
-      color: "white", 
-      zIndex: 9999 
-    }),
-    option: (base, state) => ({ 
-      ...base, 
-      backgroundColor: state.isFocused ? "#3a3a3a" : "#2a2a2a", 
+    control: (base) => ({
+      ...base,
+      backgroundColor: "#2a2a2a",
+      borderColor: "#555",
       color: "white",
-      cursor: "pointer"
+      borderRadius: 8,
+    }),
+    menu: (base) => ({
+      ...base,
+      backgroundColor: "#2a2a2a",
+      color: "white",
+      zIndex: 9999,
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isFocused ? "#3a3a3a" : "#2a2a2a",
+      color: "white",
+      cursor: "pointer",
     }),
     singleValue: (base) => ({ ...base, color: "white" }),
     placeholder: (base) => ({ ...base, color: "#aaa" }),
@@ -139,9 +136,10 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div className="bg-[#1a1a1a] text-white rounded-2xl shadow-lg w-[480px] max-h-[90vh] overflow-y-auto p-6 relative">
-        <button 
-          onClick={onClose} 
-          className="absolute top-3 right-3 text-gray-400 hover:text-white transition" 
+        {/* Nút đóng */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-400 hover:text-white transition"
           disabled={isSubmitting}
         >
           <X size={20} />
@@ -152,7 +150,7 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Tên Album */}
+          {/* 🔸 Tên Album */}
           <div>
             <label className="block mb-1 text-sm text-gray-300">
               Tên Album <span className="text-red-500">*</span>
@@ -168,22 +166,22 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
             />
           </div>
 
-          {/* Ca sĩ */}
+          {/* 🔸 Ca sĩ */}
           <div>
             <label className="block mb-1 text-sm text-gray-300">
               Ca sĩ <span className="text-red-500">*</span>
             </label>
             <Select
-              options={singers.map(s => ({ 
-                value: s.singerId || s._id, 
-                label: s.name 
+              options={singers.map((s) => ({
+                value: s.singerId || s._id,
+                label: s.name,
               }))}
               styles={customSelectStyles}
               value={
-                singers.find(s => (s.singerId || s._id) === formData.singerId)
+                singers.find((s) => (s.singerId || s._id) === formData.singerId)
                   ? {
                       value: formData.singerId,
-                      label: singers.find(s => (s.singerId || s._id) === formData.singerId).name,
+                      label: singers.find((s) => (s.singerId || s._id) === formData.singerId).name,
                     }
                   : null
               }
@@ -194,7 +192,7 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
             />
           </div>
 
-          {/* ✅ Năm phát hành - INPUT NUMBER */}
+          {/* 🔸 Năm phát hành */}
           <div>
             <label className="block mb-1 text-sm text-gray-300">Năm phát hành</label>
             <input
@@ -210,7 +208,7 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
             />
           </div>
 
-          {/* Mô tả */}
+          {/* 🔸 Mô tả */}
           <div>
             <label className="block mb-1 text-sm text-gray-300">Mô tả</label>
             <textarea
@@ -224,15 +222,15 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
             />
           </div>
 
-          {/* Ảnh bìa */}
+          {/* 🔸 Ảnh bìa */}
           <div>
             <label className="block mb-1 text-sm text-gray-300">Ảnh bìa</label>
             <label className="flex items-center justify-center px-3 py-2 bg-white text-black hover:bg-gray-200 rounded-lg cursor-pointer text-sm transition">
               Chọn ảnh
-              <input 
-                type="file" 
-                accept="image/*" 
-                className="hidden" 
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
                 onChange={handleFileChange}
                 disabled={isSubmitting}
               />
@@ -246,12 +244,20 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
 
             {isEdit && album?.coverUrl && !coverFileName && (
               <p className="text-xs text-gray-400 mt-1 truncate">
-                Ảnh hiện tại: <a href={album.coverUrl} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">Xem ảnh</a>
+                Ảnh hiện tại:{" "}
+                <a
+                  href={album.coverUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-400 hover:underline"
+                >
+                  Xem ảnh
+                </a>
               </p>
             )}
           </div>
 
-          {/* Buttons */}
+          {/* 🔸 Buttons */}
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"

@@ -1,4 +1,3 @@
-// src/components/pages/Admin/ManageUser.jsx
 import { useState, useEffect } from "react";
 import { Lock, Unlock } from "lucide-react";
 import Pagination from "../../elements/Pagination";
@@ -87,16 +86,16 @@ export default function ManageUser() {
 
       {/* Table */}
       <div className="bg-white shadow rounded-xl overflow-x-auto">
-        <table className="min-w-full border border-gray-200 text-sm">
+        <table className="min-w-full table-fixed border border-gray-200 text-sm">
           <thead className="bg-gray-100 text-gray-900 font-semibold">
             <tr>
-              <th className="px-4 py-3 text-center w-12">STT</th>
-              <th className="px-6 py-3 text-left">Tên người dùng</th>
-              <th className="px-6 py-3 text-left">Email</th>
-              <th className="px-6 py-3 text-left">Số điện thoại</th>
-              <th className="px-6 py-3 text-center">Ngày tạo</th>
-              <th className="px-6 py-3 text-center">Trạng thái</th>
-              <th className="px-6 py-3 text-center">Hành động</th>
+              <th className="px-4 py-3 text-center w-[60px]">STT</th>
+              <th className="px-6 py-3 text-left w-[180px]">Tên người dùng</th>
+              <th className="px-6 py-3 text-left w-[240px]">Email</th>
+              <th className="px-6 py-3 text-left w-[150px]">Số điện thoại</th>
+              <th className="px-6 py-3 text-center w-[140px]">Ngày tạo</th>
+              <th className="px-6 py-3 text-center w-[120px]">Trạng thái</th>
+              <th className="px-6 py-3 text-center w-[120px]">Hành động</th>
             </tr>
           </thead>
 
@@ -115,17 +114,28 @@ export default function ManageUser() {
               </tr>
             ) : (
               currentUsers.map((user, index) => (
-                <tr key={user.userId || index} className="border-t hover:bg-gray-50">
-                  <td className="text-center px-4 py-3">{startIndex + index + 1}</td>
-                  <td className="px-6 py-3 font-medium text-gray-800">{user.name || "—"}</td>
-                  <td className="px-6 py-3 text-gray-600">{user.email || "—"}</td>
-                  <td className="px-6 py-3 text-gray-600">{user.phone || "—"}</td>
+                <tr
+                  key={user.userId || index}
+                  className="border-t hover:bg-gray-50"
+                >
+                  <td className="text-center px-4 py-3 text-gray-700 font-medium">
+                    {startIndex + index + 1}
+                  </td>
+                  <td className="px-6 py-3 text-gray-800 font-medium truncate">
+                    {user.name || "—"}
+                  </td>
+                  <td className="px-6 py-3 text-gray-600 truncate">
+                    {user.email || "—"}
+                  </td>
+                  <td className="px-6 py-3 text-gray-600 truncate">
+                    {user.phone || "—"}
+                  </td>
                   <td className="text-center px-6 py-3 text-gray-600">
                     {formatDate(user.createdAt)}
                   </td>
                   <td className="text-center px-6 py-3">
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
                         user.isActive
                           ? "bg-green-100 text-green-700"
                           : "bg-red-100 text-red-700"
@@ -136,15 +146,23 @@ export default function ManageUser() {
                   </td>
                   <td className="text-center px-6 py-3">
                     <button
-                      onClick={() => handleToggleStatus(user.userId, user.isActive)}
+                      onClick={() =>
+                        handleToggleStatus(user.userId, user.isActive)
+                      }
                       className={`p-2 rounded-full border transition ${
                         user.isActive
                           ? "text-red-600 border-red-300 hover:bg-red-50"
                           : "text-green-600 border-green-300 hover:bg-green-50"
                       }`}
-                      title={user.isActive ? "Khóa tài khoản" : "Mở khóa tài khoản"}
+                      title={
+                        user.isActive ? "Khóa tài khoản" : "Mở khóa tài khoản"
+                      }
                     >
-                      {user.isActive ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
+                      {user.isActive ? (
+                        <Lock className="w-5 h-5" />
+                      ) : (
+                        <Unlock className="w-5 h-5" />
+                      )}
                     </button>
                   </td>
                 </tr>

@@ -3,18 +3,32 @@ import { useState, useEffect } from "react";
 import axios from "../../../../configs/apiConfig";
 
 const ArtistForm = ({ isEdit = false, singer = null, onClose, onSuccess, onError }) => {
-  const [formData, setFormData] = useState({ name: "", bio: "", image: null });
+  const [formData, setFormData] = useState({
+    name: "",
+    bio: "",
+    image: null,
+  });
+
   const [imageFileName, setImageFileName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Load dữ liệu khi chỉnh sửa
   useEffect(() => {
     if (isEdit && singer) {
-      setFormData({ name: singer.name || "", bio: singer.bio || "", image: null });
+      setFormData({
+        name: singer.name || "",
+        bio: singer.bio || "",
+        image: null,
+      });
       setImageFileName("");
     }
   }, [isEdit, singer]);
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Xử lý thay đổi input
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  // Xử lý chọn file ảnh
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -22,9 +36,13 @@ const ArtistForm = ({ isEdit = false, singer = null, onClose, onSuccess, onError
     setImageFileName(file.name);
   };
 
+  // Gửi form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name.trim()) return onError?.("Vui lòng nhập tên nghệ sĩ!");
+
+    if (!formData.name.trim()) {
+      return onError?.("Vui lòng nhập tên nghệ sĩ!");
+    }
 
     setIsSubmitting(true);
     try {
@@ -44,6 +62,7 @@ const ArtistForm = ({ isEdit = false, singer = null, onClose, onSuccess, onError
         });
         onSuccess?.("Thêm nghệ sĩ thành công!");
       }
+
       onClose();
     } catch (err) {
       console.error("❌ Submit error:", err);
@@ -54,23 +73,27 @@ const ArtistForm = ({ isEdit = false, singer = null, onClose, onSuccess, onError
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-[#1a1a1a] text-white rounded-2xl shadow-lg w-[480px] max-h-[90vh] overflow-y-auto p-6 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+      <div className="relative w-[480px] max-h-[90vh] overflow-y-auto rounded-2xl bg-[#1a1a1a] p-6 text-white shadow-lg">
+        {/* Nút đóng */}
         <button
           onClick={onClose}
           disabled={isSubmitting}
-          className="absolute top-3 right-3 text-gray-400 hover:text-white transition"
+          className="absolute right-3 top-3 text-gray-400 transition hover:text-white disabled:opacity-50"
         >
           <X size={20} />
         </button>
 
-        <h2 className="text-xl font-bold text-center mb-6">
+        {/* Tiêu đề */}
+        <h2 className="mb-6 text-center text-xl font-bold">
           {isEdit ? "Chỉnh sửa nghệ sĩ" : "Thêm nghệ sĩ"}
         </h2>
 
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Tên nghệ sĩ */}
           <div>
-            <label className="block mb-1 text-sm text-gray-300">
+            <label className="mb-1 block text-sm text-gray-300">
               Tên nghệ sĩ <span className="text-red-500">*</span>
             </label>
             <input
@@ -78,65 +101,83 @@ const ArtistForm = ({ isEdit = false, singer = null, onClose, onSuccess, onError
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-[#2a2a2a] text-white placeholder-gray-400 focus:ring-2 focus:ring-white focus:outline-none"
               placeholder="Nhập tên nghệ sĩ..."
               required
               disabled={isSubmitting}
+              className="w-full rounded-lg border border-gray-700 bg-[#2a2a2a] px-3 py-2 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
             />
           </div>
 
+          {/* Mô tả */}
           <div>
-            <label className="block mb-1 text-sm text-gray-300">Mô tả</label>
+            <label className="mb-1 block text-sm text-gray-300">Mô tả</label>
             <textarea
               name="bio"
               rows="4"
               value={formData.bio}
               onChange={handleChange}
-              className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-[#2a2a2a] text-white placeholder-gray-400 resize-none focus:ring-2 focus:ring-white focus:outline-none"
               placeholder="Nhập mô tả về nghệ sĩ..."
               disabled={isSubmitting}
+              className="w-full resize-none rounded-lg border border-gray-700 bg-[#2a2a2a] px-3 py-2 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
             />
           </div>
 
+          {/* Ảnh đại diện */}
           <div>
-            <label className="block mb-1 text-sm text-gray-300">Ảnh đại diện</label>
-            <label className="flex items-center justify-center px-3 py-2 bg-white text-black rounded-lg cursor-pointer hover:bg-gray-200 text-sm transition">
+            <label className="mb-1 block text-sm text-gray-300">
+              Ảnh đại diện
+            </label>
+            <label className="flex cursor-pointer items-center justify-center rounded-lg bg-white px-3 py-2 text-sm text-black transition hover:bg-gray-200">
               Chọn ảnh
-              <input 
-                type="file" 
-                accept="image/*" 
-                className="hidden" 
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
                 onChange={handleFileChange}
                 disabled={isSubmitting}
               />
             </label>
 
+            {/* Tên file ảnh mới */}
             {imageFileName && (
-              <p className="text-xs text-gray-400 mt-1 truncate" title={imageFileName}>
+              <p
+                className="mt-1 truncate text-xs text-gray-400"
+                title={imageFileName}
+              >
                 📁 {imageFileName}
               </p>
             )}
 
+            {/* Ảnh hiện tại */}
             {isEdit && singer?.imageUrl && !imageFileName && (
-              <p className="text-xs text-gray-400 mt-1 truncate">
-                Ảnh hiện tại: <a href={singer.imageUrl} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">Xem ảnh</a>
+              <p className="mt-1 truncate text-xs text-gray-400">
+                Ảnh hiện tại:{" "}
+                <a
+                  href={singer.imageUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-400 hover:underline"
+                >
+                  Xem ảnh
+                </a>
               </p>
             )}
           </div>
 
+          {/* Nút hành động */}
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-lg border border-gray-600 hover:bg-gray-800 text-white transition"
+              className="rounded-lg border border-gray-600 px-4 py-2 text-white transition hover:bg-gray-800 disabled:opacity-50"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-lg bg-white text-black hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="rounded-lg bg-white px-4 py-2 text-black transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? "Đang xử lý..." : isEdit ? "Lưu" : "Thêm"}
             </button>
