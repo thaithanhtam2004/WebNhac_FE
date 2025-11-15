@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 // 🔄 Đổi import này
-import { sendOTP } from "../../services/AuthService";
+import { sendOTP } from "../../../services/authService";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
