@@ -101,14 +101,6 @@ export default function MusicPlayerBar() {
             className="p-2 hover:bg-white/5 rounded-full transition-all group"
             title={isLiked ? "Bỏ thích" : "Yêu thích"}
           >
-            <Heart 
-              size={20} 
-              className={`transition-all ${
-                isLiked 
-                  ? "fill-red-500 text-red-500" 
-                  : "text-gray-400 group-hover:text-white group-hover:scale-110"
-              }`}
-            />
           </button>
         </div>
       </div>
