@@ -70,7 +70,6 @@ export default function LatestSongsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Clock className="w-7 h-7 text-cyan-400" />
           <h1 className="text-2xl font-bold">Bài hát mới nhất</h1>
         </div>
 

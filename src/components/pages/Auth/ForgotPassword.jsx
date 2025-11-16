@@ -21,7 +21,7 @@ const ForgotPasswordPage = () => {
       const res = await sendOTP(email);
 
       if (res.success) {
-        setMessage(res.message || "✅ OTP đã được gửi đến email của bạn!");
+        setMessage(res.message || "OTP đã được gửi đến email của bạn!");
         // Chuyển hướng đến trang xác minh OTP sau 2 giây
         setTimeout(() => {
           navigate(`/auth/verify-otp?email=${encodeURIComponent(email)}`);

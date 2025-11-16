@@ -64,7 +64,7 @@ const RegisterPage = () => {
     setLoading(false);
 
     if (res.success) {
-      setMessage("✅ Đăng ký thành công!");
+      setMessage("Đăng ký thành công!");
       setTimeout(() => navigate("/auth/login"), 1500);
     } else {
       setError(res.message || "Đăng ký thất bại");

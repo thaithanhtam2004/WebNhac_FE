@@ -20,7 +20,7 @@ const VerifyOTPPage = () => {
   if (!email) {
     return (
       <div className="flex flex-col items-center justify-center h-screen text-white text-center space-y-4">
-        <h2 className="text-2xl font-bold">❌ Thiếu thông tin email!</h2>
+        <h2 className="text-2xl font-bold">Thiếu thông tin email!</h2>
         <p className="text-gray-400">
           Vui lòng quay lại trang{" "}
           <Link
@@ -72,14 +72,14 @@ const VerifyOTPPage = () => {
 
     try {
       const res = await verifyOTP(email, otpCode);
-      setMessage(res.message || "✅ Xác thực OTP thành công!");
+      setMessage(res.message || "Xác thực OTP thành công!");
       setTimeout(() => {
         navigate(`/auth/reset-password?email=${email}&otp=${otpCode}`);
       }, 1500);
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "❌ OTP không hợp lệ hoặc đã hết hạn. Vui lòng thử lại."
+          "OTP không hợp lệ hoặc đã hết hạn. Vui lòng thử lại."
       );
     } finally {
       setLoading(false);

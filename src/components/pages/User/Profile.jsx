@@ -1,49 +1,80 @@
 import React from "react";
-import { LogOut } from "lucide-react";
+import { User, Mail, Phone, Shield, LogOut } from "lucide-react";
+import { useAuth } from "../../providers/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
-  // Dữ liệu giả
-  const user = {
-    tennguoidung: "thuyen",
-    email: "cus@gmail.com",
-  };
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  const handleChangePassword = () => {
+  const handleChangePassword = () =>
     alert("Chức năng đổi mật khẩu sẽ được thêm sau!");
-  };
 
   const handleLogout = () => {
-    alert("Đăng xuất thành công!");
+    logout();
+    navigate("/auth/login");
   };
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#121212] text-white flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Bạn chưa đăng nhập</h2>
+          <button
+            onClick={() => navigate("/auth/login")}
+            className="px-6 py-3 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform"
+          >
+            Đăng nhập ngay
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-start justify-start px-8 py-6">
-      {/* Thanh trên cùng */}
-      <div className="w-full flex justify-between items-center mb-10">
-        {/* Thông tin người dùng */}
-        <div>
-          <h1 className="text-2xl font-bold mb-1">Thông tin cá nhân</h1>
-          <p>
-            <span className="font-semibold">Tên người dùng:</span>{" "}
-            {user.tennguoidung}
-          </p>
-          <p>
-            <span className="font-semibold">Email:</span> {user.email}
-          </p>
+    <div className="min-h-screen bg-[#121212] text-white p-6">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">Hồ sơ cá nhân</h1>
         </div>
 
-        {/* Nút đăng xuất */}
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg font-semibold hover:bg-red-700 transition"
-        >
-          <LogOut size={18} />
-          Đăng xuất
-        </button>
-      </div>
+        {/* Avatar & Name */}
+        <div className="bg-[#181818] rounded-lg p-6 mb-4">
+          {/* Personal Info */}
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 p-3 bg-[#282828] rounded-lg">
+              <User className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-gray-400 text-xs mb-1">Tên người dùng</p>
+                <p className="text-white font-medium">{user.name}</p>
+              </div>
+            </div>
 
-      {/* Các nút thao tác khác */}
-     
+            <div className="flex items-start gap-3 p-3 bg-[#282828] rounded-lg">
+              <Mail className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-gray-400 text-xs mb-1">Email</p>
+                <p className="text-white font-medium">{user.email}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Security Section */}
+        <div className="bg-[#181818] rounded-lg p-6 mb-4">
+          <div className="flex items-center gap-3 mb-4">
+            <Shield className="w-5 h-5 text-white" />
+            <h3 className="text-white font-semibold">Bảo mật</h3>
+          </div>
+          <button
+            onClick={handleChangePassword}
+            className="w-full px-4 py-3 bg-[#282828] text-white rounded-lg hover:bg-[#383838] transition-colors text-sm font-medium"
+          >
+            Đổi mật khẩu
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

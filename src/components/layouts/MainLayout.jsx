@@ -7,25 +7,22 @@ export default function MainLayout() {
   const { currentTrack, isPlaying, play, pause, audioRef } = usePlayer();
 
   return (
-    <div className="flex h-screen bg-black text-white">
-      {/* Sidebar cố định */}
-      <aside className="w-64 bg-[#1e1e1e] shadow-lg shadow-black/50 border-r border-gray-800 flex-shrink-0">
+    <div className="flex h-screen bg-black text-white overflow-hidden">
+      {/* Sidebar */}
+      <aside className="w-64 bg-black flex-shrink-0">
         <Sidebar />
       </aside>
 
-      {/* Nội dung chính */}
-      <div className="flex-1 flex flex-col">
-        {/* Main scrollable */}
-        <main className="flex-1 overflow-y-auto p-6 bg-[#121212]">
-          {/* Container nội dung */}
-          <div className="flex flex-col gap-6 min-h-full rounded-xl bg-[#1a1a1a] p-4 shadow-inner shadow-black/40">
-            <Outlet />
-          </div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-y-auto bg-gradient-to-b from-[#1a1a1a] to-[#121212]">
+          <Outlet />
         </main>
 
-        {/* Music Player Bar cố định ở dưới */}
+        {/* Music Player Bar - Fixed at bottom */}
         {currentTrack && (
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 border-t border-[#282828]">
             <MusicPlayerBar
               tracks={[currentTrack]}
               isPlaying={isPlaying}

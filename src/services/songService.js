@@ -55,6 +55,16 @@ export const searchAll = async (query) => {
   }
 };
 
+export const getSongById = async (songId) => {
+  try {
+    const response = await axios.get(`${API_BASE}/${songId}`); // ✅ Dùng API_BASE và axios
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching song:", error);
+    throw error;
+  }
+};
+
 export const getSongsBySinger = async (singerId) => {
   const response = await axios.get(`${API_BASE}/singer/${singerId}`);
   return response.data.data;

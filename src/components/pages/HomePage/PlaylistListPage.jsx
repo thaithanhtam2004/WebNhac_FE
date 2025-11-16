@@ -42,8 +42,19 @@ export default function PlaylistListPage() {
     }
   };
 
+  if (!user)
+    return (
+      <p className="text-gray-400 text-center py-10">
+        Vui lòng đăng nhập để xem playlist cá nhân.
+      </p>
+    );
+
   if (loading)
-    return <p className="text-white text-center mt-10">Đang tải playlist...</p>;
+    return (
+      <p className="text-gray-400 text-center py-10">
+        Đang tải playlist cá nhân...
+      </p>
+    );
 
   return (
     <div className="p-6 relative">

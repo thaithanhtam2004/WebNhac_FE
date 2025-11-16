@@ -48,7 +48,7 @@ const LoginPage = () => {
         // ✅ Cập nhật AuthContext với thông tin user
         login(userData);
 
-        setSuccess("✅ Đăng nhập thành công!");
+        setSuccess("Đăng nhập thành công!");
         setTimeout(() => navigate("/"), 1500);
       } else {
         setError(res.data.message || "Đăng nhập thất bại");
