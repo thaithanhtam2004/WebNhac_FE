@@ -150,7 +150,7 @@ export default function AlbumPage() {
       </div>
 
       {/* Section gợi ý album khác */}
-      {albums.length > 1 && (
+      {album.length > 1 && (
         <Section
           title="Album liên quan"
           data={albums.filter((a) => a.albumId !== album.albumId)}
