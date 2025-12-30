@@ -7,7 +7,7 @@ import { useAuth } from "../../providers/AuthContext";
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth(); // ✅ Lấy hàm login từ AuthContext
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -40,16 +40,22 @@ const LoginPage = () => {
       });
 
       if (res.data.success) {
-        const userData = res.data.data; // ✅ Lấy đúng phần data từ backend
+        const userData = res.data.data;
 
-        // ✅ Lưu token vào localStorage
+        console.log("LOGIN USER:", userData);
+
         localStorage.setItem("token", userData.token);
-
-        // ✅ Cập nhật AuthContext với thông tin user
         login(userData);
 
         setSuccess("Đăng nhập thành công!");
-        setTimeout(() => navigate("/"), 1500);
+
+        setTimeout(() => {
+          if (userData?.roleName === "admin") {
+            navigate("/admin");
+          } else {
+            navigate("/");
+          }
+        }, 500);
       } else {
         setError(res.data.message || "Đăng nhập thất bại");
       }
@@ -62,8 +68,6 @@ const LoginPage = () => {
 
   return (
     <>
-
-
       <h1 className="text-2xl font-semibold mb-6 text-white">ĐĂNG NHẬP</h1>
 
       <form className="flex flex-col space-y-5 w-full" onSubmit={handleSubmit}>
@@ -95,7 +99,9 @@ const LoginPage = () => {
         </div>
 
         <div className="flex flex-col space-y-2 relative">
-          <label className="text-gray-300 text-sm font-medium text-left">Mật khẩu</label>
+          <label className="text-gray-300 text-sm font-medium text-left">
+            Mật khẩu
+          </label>
           <input
             ref={passwordRef}
             type={showPassword ? "text" : "password"}
@@ -152,6 +158,6 @@ const LoginPage = () => {
       </div>
     </>
   );
-}
+};
 
 export default LoginPage;
