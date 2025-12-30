@@ -1,18 +1,42 @@
-import { useState, useEffect } from "react";
-import { Plus, Edit, Trash, Eye, X, Music } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Plus, Edit, Trash, Eye, X, Music, Loader2, Filter, ArrowUpDown } from "lucide-react";
 import AlbumForm from "../../ui/Admin/Album/AlbumForm";
 import Pagination from "../../elements/Pagination";
 import axios from "../../../configs/apiConfig";
 import { useNotification } from "../../../hooks/useNotification";
 import { useConfirmDialog } from "../../../hooks/useConfirmDialog";
 
+// ✅ Custom hook for debounced value
+function useDebounce(value, delay = 300) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export default function Albums() {
   // === State Management ===
   const [albums, setAlbums] = useState([]);
-  const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // ✅ Separate search term and debounced search
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // ✅ New: Filter and sort states
+  const [sortBy, setSortBy] = useState(""); // name, year, songCount
+  const [sortOrder, setSortOrder] = useState("asc"); // asc, desc
+  const [filterArtist, setFilterArtist] = useState("");
 
   // === Form States ===
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -32,12 +56,16 @@ export default function Albums() {
   const [songSearch, setSongSearch] = useState("");
   const [songPage, setSongPage] = useState(1);
 
-  // === Custom Hooks ===
-  const { showNotification, NotificationUI } = useNotification();
-  const { confirm, ConfirmUI } = useConfirmDialog();
+  // ✅ New: Loading states for individual actions
+  const [deletingId, setDeletingId] = useState(null);
+  const [removingSongId, setRemovingSongId] = useState(null);
 
   // === Constants ===
   const itemsPerPage = 10;
+
+  // === Custom Hooks ===
+  const { showNotification, NotificationUI } = useNotification();
+  const { confirm, ConfirmUI } = useConfirmDialog();
 
   // === Data Fetching ===
 
@@ -48,7 +76,6 @@ export default function Albums() {
     try {
       setLoading(true);
       const res = await axios.get("/albums");
-      console.log("Fetched albums:", res.data);
       const data = res.data?.data || res.data || [];
       setAlbums(Array.isArray(data) ? data : []);
       setError(null);
@@ -76,10 +103,8 @@ export default function Albums() {
       const cleanAlbumId = String(albumId).trim();
       const encodedAlbumId = encodeURIComponent(cleanAlbumId);
       const url = `/albums/${encodedAlbumId}/songs`;
-      console.log("Request URL:", url);
 
       const res = await axios.get(url);
-      console.log("Raw response:", res.data);
 
       let songsData;
       if (res.data?.data) songsData = res.data.data;
@@ -87,11 +112,9 @@ export default function Albums() {
       else if (Array.isArray(res.data)) songsData = res.data;
       else songsData = [];
 
-      console.log("Processed songs data:", songsData);
       setAlbumSongs(Array.isArray(songsData) ? songsData : []);
     } catch (err) {
       console.error("Fetch album songs error:", err);
-      console.error("Error response:", err.response?.data);
       setAlbumSongs([]);
       showNotification(
         "error",
@@ -102,23 +125,25 @@ export default function Albums() {
     }
   };
 
-  // Effect tải album khi component mount
   useEffect(() => {
     fetchAlbums();
   }, []);
+
+  // ✅ Reset page when search/filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, filterArtist, sortBy, sortOrder]);
 
   // === Event Handlers ===
 
   /**
    * Mở modal chi tiết và tải bài hát của album
    */
-  const handleViewDetail = async (album) => {
-    console.log("Opening detail for album:", album);
+  const handleViewDetail = useCallback(async (album) => {
     setDetailAlbum(album);
     setIsDetailOpen(true);
 
     const albumId = album.albumId || album._id || album.id;
-    console.log("Extracted album ID:", albumId);
 
     if (albumId) {
       await fetchAlbumSongs(albumId);
@@ -126,55 +151,90 @@ export default function Albums() {
       console.error("Cannot extract album ID from:", album);
       showNotification("error", "Không tìm thấy ID album");
     }
-  };
+  }, []);
 
   /**
-   * Xử lý xóa album
+   * ✅ Optimized delete - Remove from state instead of re-fetch
    */
   const handleDelete = async (albumId) => {
+    if (!albumId) {
+      showNotification("error", "ID album không hợp lệ");
+      return;
+    }
+
     const ok = await confirm("Bạn có chắc muốn xóa album này?");
     if (!ok) return;
 
+    setDeletingId(albumId);
     try {
       await axios.delete(`/albums/${albumId}`);
-      await fetchAlbums();
+      
+      // ✅ Remove from state instead of re-fetching
+      setAlbums((prev) => prev.filter((a) => {
+        const id = a.albumId || a._id || a.id;
+        return id !== albumId;
+      }));
       showNotification("success", "Đã xóa album thành công!");
+      
+      // ✅ Adjust pagination if needed
+      const newTotal = albums.length - 1;
+      const maxPage = Math.ceil(newTotal / itemsPerPage);
+      if (currentPage > maxPage && maxPage > 0) {
+        setCurrentPage(maxPage);
+      }
     } catch (err) {
       console.error("Delete album error:", err);
-      showNotification("error", "Không thể xóa album");
+      showNotification("error", err.response?.data?.message || "Không thể xóa album");
+    } finally {
+      setDeletingId(null);
     }
   };
 
   /**
-   * Xử lý xóa bài hát khỏi album (trong modal chi tiết)
+   * ✅ Optimized remove song - Update local state
    */
   const handleRemoveSongFromAlbum = async (songId) => {
     const ok = await confirm("Bạn có chắc muốn xóa bài hát này khỏi album?");
     if (!ok) return;
 
+    setRemovingSongId(songId);
     try {
       const albumId = detailAlbum.albumId || detailAlbum._id || detailAlbum.id;
       await axios.delete(`/albums/${albumId}/songs/${songId}`);
-      await fetchAlbumSongs(albumId); // Tải lại danh sách bài hát
+      
+      // ✅ Update local state instead of re-fetching
+      setAlbumSongs((prev) => prev.filter((s) => {
+        const id = s.songId || s._id;
+        return id !== songId;
+      }));
       showNotification("success", "Đã xóa bài hát khỏi album!");
     } catch (err) {
       console.error("Remove song error:", err);
-      showNotification("error", "Không thể xóa bài hát");
+      showNotification("error", err.response?.data?.message || "Không thể xóa bài hát");
+    } finally {
+      setRemovingSongId(null);
     }
   };
 
   /**
    * Mở modal "Thêm bài hát" và tải danh sách bài hát có sẵn
+   * ✅ CẬP NHẬT: Thêm logic lọc bài hát theo Ca sĩ
    */
-  const handleOpenAddSong = async () => {
+  const handleOpenAddSong = useCallback(async () => {
     try {
       const res = await axios.get("/songs");
       const allSongs = res.data?.data || res.data || [];
 
+      // 1. Lọc bài đã có trong album
       const currentSongIds = albumSongs.map((s) => s.songId || s._id);
-      const available = allSongs.filter(
+      let available = allSongs.filter(
         (s) => !currentSongIds.includes(s.songId || s._id)
       );
+
+      // ✅ 2. [LOGIC MỚI] Chỉ lấy bài hát CÙNG CA SĨ với Album
+      if (detailAlbum && detailAlbum.singerId) {
+         available = available.filter(s => String(s.singerId) === String(detailAlbum.singerId));
+      }
 
       setAvailableSongs(available);
       setSelectedSongs([]);
@@ -185,7 +245,7 @@ export default function Albums() {
       console.error("Fetch songs error:", err);
       showNotification("error", "Không thể tải danh sách bài hát");
     }
-  };
+  }, [albumSongs, detailAlbum]); // ✅ Thêm detailAlbum vào dependency
 
   /**
    * Xử lý thêm các bài hát đã chọn vào album
@@ -198,14 +258,13 @@ export default function Albums() {
 
     try {
       const albumId = detailAlbum.albumId || detailAlbum._id || detailAlbum.id;
-      console.log("Adding songs:", selectedSongs, "to album:", albumId);
 
       await axios.post(`/albums/${albumId}/songs`, {
         songIds: selectedSongs,
       });
 
-      setIsAddSongOpen(false); // Đóng modal
-      await fetchAlbumSongs(albumId); // Tải lại danh sách bài hát
+      setIsAddSongOpen(false);
+      await fetchAlbumSongs(albumId); // Reload songs in album
       showNotification(
         "success",
         `Đã thêm ${selectedSongs.length} bài hát vào album!`
@@ -219,18 +278,103 @@ export default function Albums() {
     }
   };
 
-  // === Logic Lọc và Phân trang ===
-  const filteredAlbums = albums.filter(
-    (a) =>
-      a.name?.toLowerCase().includes(search.toLowerCase()) ||
-      a.singerName?.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleAddAlbum = useCallback(() => {
+    setIsEdit(false);
+    setEditingAlbum(null);
+    setIsFormOpen(true);
+  }, []);
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedAlbums = filteredAlbums.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+  const handleEditAlbum = useCallback((album) => {
+    setIsEdit(true);
+    setEditingAlbum(album);
+    setIsFormOpen(true);
+  }, []);
+
+  const handleFormClose = useCallback(() => {
+    setIsFormOpen(false);
+    fetchAlbums();
+  }, []);
+
+  const handleEditFromDetail = useCallback(() => {
+    setIsDetailOpen(false);
+    handleEditAlbum(detailAlbum);
+  }, [detailAlbum]);
+
+  // ✅ Clear all filters
+  const handleClearFilters = useCallback(() => {
+    setSearchTerm("");
+    setFilterArtist("");
+    setSortBy("");
+    setSortOrder("asc");
+  }, []);
+
+  // ✅ Get unique artists for filter
+  const uniqueArtists = useMemo(() => {
+    const artists = new Set();
+    albums.forEach((album) => {
+      if (album.singerName) artists.add(album.singerName);
+    });
+    return Array.from(artists).sort();
+  }, [albums]);
+
+  // ✅ Optimized filtering and sorting with useMemo
+  const filteredAndSortedAlbums = useMemo(() => {
+    let result = albums.filter((album) => {
+      const matchSearch = 
+        (album?.name || "").toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        (album?.singerName || "").toLowerCase().includes(debouncedSearch.toLowerCase());
+      
+      const matchArtist = !filterArtist || album?.singerName === filterArtist;
+
+      return matchSearch && matchArtist;
+    });
+
+    // Apply sorting
+    if (sortBy) {
+      result.sort((a, b) => {
+        let aVal, bVal;
+
+        switch (sortBy) {
+          case "name":
+            aVal = (a.name || "").toLowerCase();
+            bVal = (b.name || "").toLowerCase();
+            break;
+          case "year":
+            aVal = a.releaseDate ? new Date(a.releaseDate).getFullYear() : 0;
+            bVal = b.releaseDate ? new Date(b.releaseDate).getFullYear() : 0;
+            break;
+          case "songCount":
+            aVal = a.songCount || 0;
+            bVal = b.songCount || 0;
+            break;
+          default:
+            return 0;
+        }
+
+        if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
+        if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [albums, debouncedSearch, filterArtist, sortBy, sortOrder]);
+
+  // ✅ Optimized pagination with useMemo
+  const currentAlbums = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredAndSortedAlbums.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredAndSortedAlbums, currentPage, itemsPerPage]);
+
+  // ✅ Toggle sort
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(field);
+      setSortOrder("asc");
+    }
+  };
 
   // === Helper Functions ===
 
@@ -256,51 +400,126 @@ export default function Albums() {
   return (
     <div className="p-8 relative">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Quản lý Album</h1>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <h1 className="text-2xl font-bold text-gray-800">Quản lý Album</h1>
 
-        <div className="flex items-center gap-3">
-          <input
-            type="text"
-            placeholder="Tìm kiếm album..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-black"
-          />
-          <button
-            className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl shadow hover:bg-gray-800 transition"
-            onClick={() => {
-              setIsEdit(false);
-              setEditingAlbum(null);
-              setIsFormOpen(true);
-            }}
+          <div className="flex items-center gap-3">
+            <input
+              type="text"
+              placeholder="Tìm kiếm album..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black w-64"
+            />
+
+            <button
+              className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl shadow hover:bg-gray-800 transition"
+              onClick={handleAddAlbum}
+            >
+              <Plus className="w-5 h-5" />
+              Thêm album
+            </button>
+          </div>
+        </div>
+
+        {/* ✅ Filter and Sort Section */}
+        <div className="flex flex-wrap items-center gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
+          <Filter className="w-5 h-5 text-gray-600" />
+          
+          <select
+            value={filterArtist}
+            onChange={(e) => setFilterArtist(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-sm"
           >
-            <Plus className="w-5 h-5" /> Thêm album
-          </button>
+            <option value="">Tất cả nghệ sĩ</option>
+            {uniqueArtists.map((artist) => (
+              <option key={artist} value={artist}>
+                {artist}
+              </option>
+            ))}
+          </select>
+
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="w-4 h-4 text-gray-600" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-sm"
+            >
+              <option value="">Sắp xếp theo</option>
+              <option value="name">Tên album</option>
+              <option value="year">Năm phát hành</option>
+              <option value="songCount">Số bài hát</option>
+            </select>
+
+            {sortBy && (
+              <button
+                onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
+                className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition text-sm font-medium"
+              >
+                {sortOrder === "asc" ? "↑ Tăng" : "↓ Giảm"}
+              </button>
+            )}
+          </div>
+
+          {(searchTerm || filterArtist || sortBy) && (
+            <button
+              onClick={handleClearFilters}
+              className="ml-auto px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition text-sm font-medium"
+            >
+              Xóa bộ lọc
+            </button>
+          )}
+        </div>
+
+        {/* Results count */}
+        <div className="text-sm text-gray-600">
+          Hiển thị <span className="font-semibold">{currentAlbums.length}</span> / {" "}
+          <span className="font-semibold">{filteredAndSortedAlbums.length}</span> album
+          {albums.length !== filteredAndSortedAlbums.length && (
+            <span className="text-gray-500"> (từ tổng {albums.length})</span>
+          )}
         </div>
       </div>
 
       {/* Table */}
       <div className="bg-white shadow rounded-xl overflow-x-auto">
-        <table className="table-fixed min-w-full border border-gray-200">
+        <table className="min-w-full border border-gray-200">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 w-[5%]">
+              <th className="w-[60px] px-4 py-3 text-center text-sm font-semibold text-gray-900 border-b">
                 STT
               </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 w-[25%]">
-                Tên Album
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 border-b">
+                <button
+                  onClick={() => handleSort("name")}
+                  className="flex items-center gap-1 hover:text-black"
+                >
+                  Tên Album
+                  {sortBy === "name" && (
+                    <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                  )}
+                </button>
               </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 w-[20%]">
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 border-b">
                 Nghệ sĩ
               </th>
-              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900 w-[10%]">
-                Năm
+              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900 border-b">
+                <button
+                  onClick={() => handleSort("year")}
+                  className="flex items-center gap-1 hover:text-black mx-auto"
+                >
+                  Năm
+                  {sortBy === "year" && (
+                    <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                  )}
+                </button>
               </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 w-[25%]">
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 border-b">
                 Mô tả
               </th>
-              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900 w-[15%]">
+              <th className="w-[150px] px-6 py-3 text-center text-sm font-semibold text-gray-900 border-b">
                 Hành động
               </th>
             </tr>
@@ -309,8 +528,9 @@ export default function Albums() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="6" className="text-center py-4 text-gray-600">
-                  Đang tải...
+                <td colSpan="6" className="text-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-600" />
+                  <p className="text-gray-600 mt-2">Đang tải...</p>
                 </td>
               </tr>
             ) : error ? (
@@ -319,81 +539,105 @@ export default function Albums() {
                   {error}
                 </td>
               </tr>
-            ) : paginatedAlbums.length === 0 ? (
+            ) : currentAlbums.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center py-4 text-gray-600 italic">
-                  Không có album nào
+                <td colSpan="6" className="text-center py-8 text-gray-600">
+                  {debouncedSearch || filterArtist ? (
+                    <div>
+                      <p className="text-lg mb-2">Không tìm thấy kết quả</p>
+                      <button
+                        onClick={handleClearFilters}
+                        className="text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Xóa bộ lọc
+                      </button>
+                    </div>
+                  ) : (
+                    "Không có album nào"
+                  )}
                 </td>
               </tr>
             ) : (
-              paginatedAlbums.map((album, index) => (
-                <tr
-                  key={album.albumId || album.id || index}
-                  className="border-t hover:bg-gray-50"
-                >
-                  <td className="px-4 py-3 text-center text-gray-700 font-medium truncate">
-                    {startIndex + index + 1}
-                  </td>
-                  <td className="px-6 py-3 text-gray-700 truncate">
-                    {album?.name || "—"}
-                  </td>
-                  <td className="px-6 py-3 text-gray-700 truncate">
-                    {album?.singerName || "—"}
-                  </td>
-                  <td className="px-6 py-3 text-center text-gray-700 truncate">
-                    {formatReleaseYear(album?.releaseDate)}
-                  </td>
-                  <td className="px-6 py-3 text-gray-700 truncate">
-                    {truncateText(album?.description, 60)}
-                  </td>
-                  <td className="px-6 py-3 text-center">
-                    <div className="flex justify-center gap-2">
-                      <button
-                        onClick={() => handleViewDetail(album)}
-                        className="p-2 border rounded-full bg-white shadow-sm hover:bg-blue-50 text-blue-600 hover:text-blue-800 transition"
-                        title="Xem chi tiết"
-                      >
-                        <Eye className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEdit(true);
-                          setEditingAlbum(album);
-                          setIsFormOpen(true);
-                        }}
-                        className="p-2 border rounded-full bg-white shadow-sm hover:bg-gray-100 text-gray-700 hover:text-black transition"
-                        title="Chỉnh sửa"
-                      >
-                        <Edit className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleDelete(album.albumId || album.id || album._id)
-                        }
-                        className="p-2 border rounded-full bg-white shadow-sm hover:bg-red-50 text-red-600 hover:text-red-800 transition"
-                        title="Xóa"
-                      >
-                        <Trash className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+              currentAlbums.map((album, index) => {
+                const albumId = album.albumId || album.id || album._id;
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                
+                return (
+                  <tr
+                    key={albumId || index}
+                    className="border-t hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-center text-gray-700">
+                      {startIndex + index + 1}
+                    </td>
+                    <td className="px-6 py-3 text-gray-800 font-medium truncate max-w-[200px]">
+                      {album?.name || "—"}
+                    </td>
+                    <td className="px-6 py-3 text-gray-700 truncate max-w-[150px]">
+                      {album?.singerName || "—"}
+                    </td>
+                    <td className="px-6 py-3 text-center text-gray-700">
+                      {formatReleaseYear(album?.releaseDate)}
+                    </td>
+                    <td className="px-6 py-3 text-gray-600 truncate max-w-[300px]">
+                      {truncateText(album?.description, 60)}
+                    </td>
+                    <td className="px-6 py-3">
+                      <div className="flex items-center justify-center gap-3">
+                        <button
+                          onClick={() => handleViewDetail(album)}
+                          className="p-2 rounded-full bg-white border border-gray-300 shadow-sm hover:bg-blue-50 text-blue-600 hover:text-blue-800 transition"
+                          title="Xem chi tiết"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleEditAlbum(album)}
+                          className="p-2 rounded-full bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 hover:text-black transition"
+                          title="Chỉnh sửa"
+                        >
+                          <Edit className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(albumId)}
+                          disabled={deletingId === albumId}
+                          className="p-2 rounded-full bg-white border border-gray-300 hover:bg-red-50 text-red-600 hover:text-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Xóa"
+                        >
+                          {deletingId === albumId ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <Trash className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalItems={filteredAlbums.length}
-        onPageChange={setCurrentPage}
-      />
+      {filteredAndSortedAlbums.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredAndSortedAlbums.length}
+          onPageChange={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+        />
+      )}
 
       {/* Modal: Chi tiết Album */}
       {isDetailOpen && detailAlbum && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsDetailOpen(false);
+          }}
+        >
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
@@ -417,8 +661,7 @@ export default function Albums() {
                       alt={detailAlbum.name}
                       className="w-48 h-48 object-cover rounded-xl shadow-lg"
                       onError={(e) => {
-                        e.target.src =
-                          "https://via.placeholder.com/192?text=No+Image";
+                        e.target.src = "https://via.placeholder.com/192?text=No+Image";
                       }}
                     />
                   ) : (
@@ -430,26 +673,26 @@ export default function Albums() {
 
                 {/* Album Info */}
                 <div className="flex-1 space-y-3">
-                  <div>
+                  <div className="bg-gray-50 p-4 rounded-xl">
                     <p className="text-sm text-gray-600 mb-1">Tên Album</p>
                     <p className="text-2xl font-bold text-gray-800">
                       {detailAlbum.name || "—"}
                     </p>
                   </div>
-                  <div>
+                  <div className="bg-gray-50 p-4 rounded-xl">
                     <p className="text-sm text-gray-600 mb-1">Nghệ sĩ</p>
                     <p className="text-lg font-semibold text-gray-800">
                       {detailAlbum.singerName || "—"}
                     </p>
                   </div>
-                  <div>
+                  <div className="bg-gray-50 p-4 rounded-xl">
                     <p className="text-sm text-gray-600 mb-1">Năm phát hành</p>
                     <p className="text-gray-800 font-semibold">
                       {formatReleaseYear(detailAlbum.releaseDate)}
                     </p>
                   </div>
                   {detailAlbum.description && (
-                    <div>
+                    <div className="bg-gray-50 p-4 rounded-xl">
                       <p className="text-sm text-gray-600 mb-1">Mô tả</p>
                       <p className="text-gray-700">{detailAlbum.description}</p>
                     </div>
@@ -474,42 +717,53 @@ export default function Albums() {
                 </div>
 
                 {loadingSongs ? (
-                  <p className="text-center py-8 text-gray-600">Đang tải...</p>
+                  <div className="text-center py-8">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-600" />
+                    <p className="text-gray-600 mt-2">Đang tải...</p>
+                  </div>
                 ) : albumSongs.length === 0 ? (
-                  <p className="text-center py-8 text-gray-500 italic">
-                    Chưa có bài hát nào trong album
-                  </p>
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 italic">
+                      Chưa có bài hát nào trong album
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-2">
-                    {albumSongs.map((song, index) => (
-                      <div
-                        key={song.songId || index}
-                        className="flex items-center justify-between p-3 bg-white rounded-lg hover:shadow-md transition"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium text-gray-500 w-6">
-                            {song.trackNumber || index + 1}
-                          </span>
-                          <div>
-                            <p className="font-medium text-gray-800">
-                              {song.title || "—"}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {song.singerName || song.singerId || "—"}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() =>
-                            handleRemoveSongFromAlbum(song.songId || song._id)
-                          }
-                          className="p-2 hover:bg-red-50 rounded-full text-red-600 transition"
-                          title="Xóa khỏi album"
+                    {albumSongs.map((song, index) => {
+                      const songId = song.songId || song._id;
+                      return (
+                        <div
+                          key={songId || index}
+                          className="flex items-center justify-between p-3 bg-white rounded-lg hover:shadow-md transition"
                         >
-                          <Trash className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-gray-500 w-6">
+                              {song.trackNumber || index + 1}
+                            </span>
+                            <div>
+                              <p className="font-medium text-gray-800">
+                                {song.title || "—"}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {song.singerName || song.singerId || "—"}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveSongFromAlbum(songId)}
+                            disabled={removingSongId === songId}
+                            className="p-2 hover:bg-red-50 rounded-full text-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Xóa khỏi album"
+                          >
+                            {removingSongId === songId ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -518,12 +772,7 @@ export default function Albums() {
             {/* Footer */}
             <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
               <button
-                onClick={() => {
-                  setIsDetailOpen(false);
-                  setIsEdit(true);
-                  setEditingAlbum(detailAlbum);
-                  setIsFormOpen(true);
-                }}
+                onClick={handleEditFromDetail}
                 className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-xl hover:bg-gray-800 transition"
               >
                 <Edit className="w-4 h-4" />
@@ -572,10 +821,15 @@ export default function Albums() {
                 />
                 <Music className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
               </div>
+              
+              {/* ✅ UI UPDATE: Dòng thông báo đang lọc theo ca sĩ */}
               <p className="text-sm text-gray-600 mt-2">
-                Tổng số:{" "}
-                <span className="font-semibold">{availableSongs.length}</span>{" "}
-                bài hát
+                Tổng số: <span className="font-semibold">{availableSongs.length}</span> bài hát
+                {detailAlbum && detailAlbum.singerName && (
+                  <span className="text-blue-600 ml-1">
+                    (Đang lọc theo ca sĩ: <b>{detailAlbum.singerName}</b>)
+                  </span>
+                )}
               </p>
             </div>
 
@@ -607,7 +861,7 @@ export default function Albums() {
                       <p className="text-gray-500 italic">
                         {songSearch
                           ? "Không tìm thấy bài hát nào"
-                          : "Không có bài hát nào để thêm"}
+                          : "Không có bài hát nào phù hợp của ca sĩ này"}
                       </p>
                     </div>
                   );
@@ -809,10 +1063,7 @@ export default function Albums() {
         <AlbumForm
           isEdit={isEdit}
           album={editingAlbum}
-          onClose={() => {
-            setIsFormOpen(false);
-            fetchAlbums(); // Tải lại danh sách album sau khi đóng form
-          }}
+          onClose={handleFormClose}
           onSuccess={(msg) => showNotification("success", msg)}
           onError={(msg) => showNotification("error", msg)}
         />

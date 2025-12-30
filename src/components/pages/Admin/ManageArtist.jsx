@@ -1,18 +1,41 @@
-import { useState, useEffect } from "react";
-import { Plus, Edit, Trash, Eye, X } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Plus, Edit, Trash, Eye, X, Loader2, Filter, ArrowUpDown } from "lucide-react";
 import axios from "../../../configs/apiConfig";
 import { useNotification } from "../../../hooks/useNotification";
 import { useConfirmDialog } from "../../../hooks/useConfirmDialog";
 import ArtistForm from "../../ui/Admin/Artist/ArtistForm";
 import Pagination from "../../elements/Pagination";
 
+// ✅ Custom hook for debounced value
+function useDebounce(value, delay = 300) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export default function ManageSinger() {
   // === State Management ===
   const [singers, setSingers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [search, setSearch] = useState("");
+  
+  // ✅ Separate search term and debounced search
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
+  
   const [currentPage, setCurrentPage] = useState(1);
+
+  // ✅ New: Filter and sort states
+  const [sortBy, setSortBy] = useState(""); // name, songCount
+  const [sortOrder, setSortOrder] = useState("asc"); // asc, desc
 
   // === Form States ===
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -22,6 +45,9 @@ export default function ManageSinger() {
   // === Detail Modal States ===
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailSinger, setDetailSinger] = useState(null);
+
+  // ✅ New: Loading state for individual delete
+  const [deletingId, setDeletingId] = useState(null);
 
   // === Constants ===
   const itemsPerPage = 10;
@@ -51,77 +77,149 @@ export default function ManageSinger() {
     fetchSingers();
   }, []);
 
+  // ✅ Reset page when search/filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, sortBy, sortOrder]);
+
   // === Event Handlers ===
 
   /**
-   * Xử lý xóa nghệ sĩ
+   * ✅ Optimized delete - Remove from state instead of re-fetch
    */
   const handleDelete = async (singerId) => {
+    // ✅ Validate singerId
+    if (!singerId) {
+      showNotification("error", "ID nghệ sĩ không hợp lệ");
+      return;
+    }
+
     const ok = await confirm("Bạn có chắc muốn xóa nghệ sĩ này?");
     if (!ok) return;
 
+    setDeletingId(singerId);
     try {
       await axios.delete(`/singers/${singerId}`);
-      await fetchSingers();
+      
+      // ✅ Remove from state instead of re-fetching
+      setSingers((prev) => prev.filter((s) => s.singerId !== singerId));
       showNotification("success", "Đã xóa nghệ sĩ thành công!");
+      
+      // ✅ Adjust pagination if needed
+      const newTotal = singers.length - 1;
+      const maxPage = Math.ceil(newTotal / itemsPerPage);
+      if (currentPage > maxPage && maxPage > 0) {
+        setCurrentPage(maxPage);
+      }
     } catch (err) {
       console.error("Delete error:", err);
-      showNotification("error", "Xóa thất bại!");
+      showNotification("error", err.response?.data?.message || "Lỗi khi xóa nghệ sĩ!");
+    } finally {
+      setDeletingId(null);
     }
   };
 
   /**
    * Mở modal xem chi tiết nghệ sĩ
    */
-  const handleViewDetail = (singer) => {
+  const handleViewDetail = useCallback((singer) => {
     setDetailSinger(singer);
     setIsDetailOpen(true);
-  };
+  }, []);
 
   /**
    * Mở form để thêm nghệ sĩ mới
    */
-  const handleAddSinger = () => {
+  const handleAddSinger = useCallback(() => {
     setIsEdit(false);
     setEditingSinger(null);
     setIsFormOpen(true);
-  };
+  }, []);
 
   /**
    * Mở form để chỉnh sửa nghệ sĩ
    */
-  const handleEditSinger = (singer) => {
+  const handleEditSinger = useCallback((singer) => {
     setIsEdit(true);
     setEditingSinger(singer);
     setIsFormOpen(true);
-  };
+  }, []);
 
   /**
    * Đóng form và tải lại danh sách
    */
-  const handleFormClose = () => {
+  const handleFormClose = useCallback(() => {
     setIsFormOpen(false);
     fetchSingers();
-  };
+  }, []);
 
   /**
    * Đóng modal chi tiết và mở form chỉnh sửa
    */
-  const handleEditFromDetail = () => {
+  const handleEditFromDetail = useCallback(() => {
     setIsDetailOpen(false);
     handleEditSinger(detailSinger);
+  }, [detailSinger]);
+
+  // ✅ Clear all filters
+  const handleClearFilters = useCallback(() => {
+    setSearchTerm("");
+    setSortBy("");
+    setSortOrder("asc");
+  }, []);
+
+  // ✅ Optimized filtering and sorting with useMemo
+  const filteredAndSortedSingers = useMemo(() => {
+    let result = singers.filter((singer) => {
+      const matchSearch = (singer?.name || "")
+        .toLowerCase()
+        .includes(debouncedSearch.toLowerCase());
+      
+      return matchSearch;
+    });
+
+    // Apply sorting
+    if (sortBy) {
+      result.sort((a, b) => {
+        let aVal, bVal;
+
+        switch (sortBy) {
+          case "name":
+            aVal = (a.name || "").toLowerCase();
+            bVal = (b.name || "").toLowerCase();
+            break;
+          case "songCount":
+            aVal = a.songCount || 0;
+            bVal = b.songCount || 0;
+            break;
+          default:
+            return 0;
+        }
+
+        if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
+        if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [singers, debouncedSearch, sortBy, sortOrder]);
+
+  // ✅ Optimized pagination with useMemo
+  const currentSingers = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredAndSortedSingers.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredAndSortedSingers, currentPage, itemsPerPage]);
+
+  // ✅ Toggle sort
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(field);
+      setSortOrder("asc");
+    }
   };
-
-  // === Logic Lọc và Phân trang ===
-  const filteredSingers = singers.filter((singer) =>
-    (singer?.name || "").toLowerCase().includes((search || "").toLowerCase())
-  );
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentSingers = filteredSingers.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
 
   // === Helper Functions ===
 
@@ -142,8 +240,9 @@ export default function ManageSinger() {
     if (loading) {
       return (
         <tr>
-          <td colSpan="4" className="text-center py-4 text-gray-600">
-            Đang tải...
+          <td colSpan="4" className="text-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-600" />
+            <p className="text-gray-600 mt-2">Đang tải...</p>
           </td>
         </tr>
       );
@@ -162,28 +261,42 @@ export default function ManageSinger() {
     if (currentSingers.length === 0) {
       return (
         <tr>
-          <td colSpan="4" className="text-center py-4 text-gray-600">
-            Không có dữ liệu
+          <td colSpan="4" className="text-center py-8 text-gray-600">
+            {debouncedSearch ? (
+              <div>
+                <p className="text-lg mb-2">Không tìm thấy kết quả</p>
+                <button
+                  onClick={handleClearFilters}
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  Xóa bộ lọc
+                </button>
+              </div>
+            ) : (
+              "Không có dữ liệu"
+            )}
           </td>
         </tr>
       );
     }
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
 
     return currentSingers.map((singer, index) => (
       <tr
         key={singer.singerId || index}
         className="border-t hover:bg-gray-50 transition-colors"
       >
-        <td className="w-[60px] px-4 py-3 text-center text-gray-700">
+        <td className="px-4 py-3 text-center text-gray-700">
           {startIndex + index + 1}
         </td>
-        <td className="w-[220px] px-6 py-3 text-gray-800 font-medium truncate">
+        <td className="px-6 py-3 text-gray-800 font-medium truncate max-w-[200px]">
           {singer.name || "—"}
         </td>
-        <td className="w-[500px] px-6 py-3 text-gray-600 truncate">
+        <td className="px-6 py-3 text-gray-600 truncate max-w-[400px]">
           {truncateText(singer.bio, 80)}
         </td>
-        <td className="w-[150px] px-6 py-3">
+        <td className="px-6 py-3">
           <div className="flex items-center justify-center gap-3">
             <button
               className="p-2 rounded-full bg-white border border-gray-300 shadow-sm hover:bg-blue-50 text-blue-600 hover:text-blue-800 transition"
@@ -202,11 +315,16 @@ export default function ManageSinger() {
             </button>
 
             <button
-              className="p-2 rounded-full bg-white border border-gray-300 hover:bg-red-50 text-red-600 hover:text-red-800 transition"
+              className="p-2 rounded-full bg-white border border-gray-300 hover:bg-red-50 text-red-600 hover:text-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => handleDelete(singer.singerId)}
+              disabled={deletingId === singer.singerId}
               title="Xóa"
             >
-              <Trash className="w-5 h-5" />
+              {deletingId === singer.singerId ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Trash className="w-5 h-5" />
+              )}
             </button>
           </div>
         </td>
@@ -234,7 +352,7 @@ export default function ManageSinger() {
     }
 
     return (
-      <div className="w-48 h-48 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
+      <div className="w-48 h-48 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 font-medium">
         Không có ảnh
       </div>
     );
@@ -244,40 +362,95 @@ export default function ManageSinger() {
   return (
     <div className="p-8 relative">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Quản lý nghệ sĩ</h1>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <h1 className="text-2xl font-bold text-gray-800">Quản lý nghệ sĩ</h1>
 
-        <div className="flex items-center gap-3">
-          <input
-            type="text"
-            placeholder="Tìm kiếm nghệ sĩ..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
-          />
+          <div className="flex items-center gap-3">
+            <input
+              type="text"
+              placeholder="Tìm kiếm nghệ sĩ..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black w-64"
+            />
 
-          <button
-            className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl shadow hover:bg-gray-800 transition"
-            onClick={handleAddSinger}
-          >
-            <Plus className="w-5 h-5" />
-            Thêm nghệ sĩ
-          </button>
+            <button
+              className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl shadow hover:bg-gray-800 transition"
+              onClick={handleAddSinger}
+            >
+              <Plus className="w-5 h-5" />
+              Thêm nghệ sĩ
+            </button>
+          </div>
+        </div>
+
+        {/* ✅ Filter and Sort Section */}
+        <div className="flex flex-wrap items-center gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
+          <Filter className="w-5 h-5 text-gray-600" />
+          
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="w-4 h-4 text-gray-600" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-sm"
+            >
+              <option value="">Sắp xếp theo</option>
+              <option value="name">Tên nghệ sĩ</option>
+              <option value="songCount">Số bài hát</option>
+            </select>
+
+            {sortBy && (
+              <button
+                onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
+                className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition text-sm font-medium"
+              >
+                {sortOrder === "asc" ? "↑ Tăng" : "↓ Giảm"}
+              </button>
+            )}
+          </div>
+
+          {(searchTerm || sortBy) && (
+            <button
+              onClick={handleClearFilters}
+              className="ml-auto px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition text-sm font-medium"
+            >
+              Xóa bộ lọc
+            </button>
+          )}
+        </div>
+
+        {/* Results count */}
+        <div className="text-sm text-gray-600">
+          Hiển thị <span className="font-semibold">{currentSingers.length}</span> / {" "}
+          <span className="font-semibold">{filteredAndSortedSingers.length}</span> nghệ sĩ
+          {singers.length !== filteredAndSortedSingers.length && (
+            <span className="text-gray-500"> (từ tổng {singers.length})</span>
+          )}
         </div>
       </div>
 
       {/* Table */}
       <div className="bg-white shadow rounded-xl overflow-x-auto">
-        <table className="table-fixed min-w-full border border-gray-200">
+        <table className="min-w-full border border-gray-200">
           <thead className="bg-gray-100">
             <tr>
               <th className="w-[60px] px-4 py-3 text-center text-sm font-semibold text-gray-900 border-b">
                 STT
               </th>
-              <th className="w-[220px] px-6 py-3 text-left text-sm font-semibold text-gray-900 border-b">
-                Tên nghệ sĩ
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 border-b">
+                <button
+                  onClick={() => handleSort("name")}
+                  className="flex items-center gap-1 hover:text-black"
+                >
+                  Tên nghệ sĩ
+                  {sortBy === "name" && (
+                    <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                  )}
+                </button>
               </th>
-              <th className="w-[500px] px-6 py-3 text-left text-sm font-semibold text-gray-900 border-b">
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 border-b">
                 Mô tả
               </th>
               <th className="w-[150px] px-6 py-3 text-center text-sm font-semibold text-gray-900 border-b">
@@ -291,20 +464,28 @@ export default function ManageSinger() {
       </div>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalItems={filteredSingers.length}
-        onPageChange={setCurrentPage}
-      />
+      {filteredAndSortedSingers.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredAndSortedSingers.length}
+          onPageChange={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+        />
+      )}
 
       {/* Detail Modal */}
       {isDetailOpen && detailSinger && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsDetailOpen(false);
+          }}
+        >
           <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
               <h2 className="text-2xl font-bold text-gray-800">
-                Chi tiết nghệ sĩ: {detailSinger.name}
+                Chi tiết nghệ sĩ
               </h2>
               <button
                 onClick={() => setIsDetailOpen(false)}
@@ -332,6 +513,16 @@ export default function ManageSinger() {
                 </p>
               </div>
 
+              {/* Song Count (if available) */}
+              {detailSinger.songCount !== undefined && (
+                <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-200">
+                  <p className="text-sm text-indigo-600 mb-1">Số bài hát</p>
+                  <p className="text-2xl font-bold text-indigo-700">
+                    {detailSinger.songCount || 0} bài
+                  </p>
+                </div>
+              )}
+
               {/* Biography */}
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200">
                 <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
@@ -353,7 +544,7 @@ export default function ManageSinger() {
             </div>
 
             {/* Modal Footer */}
-            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-20G0 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
               <button
                 onClick={handleEditFromDetail}
                 className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-xl hover:bg-gray-800 transition"

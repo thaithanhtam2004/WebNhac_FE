@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, AlertCircle, ImagePlus } from "lucide-react";
 import axios from "../../../../configs/apiConfig";
 import Select from "react-select";
 
@@ -13,10 +13,21 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
   });
 
   const [coverFileName, setCoverFileName] = useState("");
+  const [coverPreview, setCoverPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
   const [singers, setSingers] = useState([]);
 
-  // 🔹 Fetch danh sách ca sĩ
+  // ====== CONSTANTS ======
+  const MAX_NAME_LENGTH = 100;
+  const MAX_DESCRIPTION_LENGTH = 1000;
+  const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+  const MIN_YEAR = 1900;
+  const MAX_YEAR = new Date().getFullYear() + 1;
+
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+
+  // ====== FETCH DATA ======
   useEffect(() => {
     const fetchSingers = async () => {
       try {
@@ -24,70 +35,93 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
         const data = Array.isArray(res.data) ? res.data : res.data.data || [];
         setSingers(data);
       } catch (err) {
-        console.error("❌ Lỗi tải danh sách ca sĩ:", err);
-        setSingers([]);
+        console.error("❌ Lỗi tải ca sĩ:", err);
+        onError?.("Không thể tải danh sách ca sĩ");
       }
     };
     fetchSingers();
   }, []);
 
-  // 🔹 Load dữ liệu khi chỉnh sửa
+  // ====== LOAD DATA ======
   useEffect(() => {
     if (isEdit && album) {
       let year = "";
       if (album.releaseDate) {
         year = new Date(album.releaseDate).getFullYear().toString();
       }
-
       setFormData({
         name: album.name || "",
-        singerId: album.singerId || "",
+        singerId: album.singerId?._id || album.singerId || "",
         year,
         description: album.description || "",
         coverUrl: null,
       });
       setCoverFileName("");
+      setCoverPreview(null);
+      setValidationErrors({});
     }
   }, [isEdit, album]);
 
+  // ====== HANDLERS ======
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    if (validationErrors[name]) setValidationErrors({ ...validationErrors, [name]: null });
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      onError?.("Ảnh quá lớn (Max 5MB)");
+      e.target.value = "";
+      return;
+    }
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      onError?.("Định dạng ảnh không hỗ trợ");
+      e.target.value = "";
+      return;
+    }
+
     setFormData({ ...formData, coverUrl: file });
-    setCoverFileName(file ? file.name : "");
+    setCoverFileName(file.name);
+    
+    const reader = new FileReader();
+    reader.onloadend = () => setCoverPreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const clearImage = () => {
+    setFormData({ ...formData, coverUrl: null });
+    setCoverFileName("");
+    setCoverPreview(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!formData.name.trim()) return onError?.("Vui lòng nhập tên album!");
-    if (!formData.singerId) return onError?.("Vui lòng chọn ca sĩ!");
-
-    // ✅ Validate năm
-    if (formData.year) {
-      const year = parseInt(formData.year);
-      const currentYear = new Date().getFullYear();
-      if (year < 1900 || year > currentYear) {
-        return onError?.(`Năm phải từ 1900 đến ${currentYear}!`);
-      }
+    
+    // Validate cơ bản
+    const errors = {};
+    if (!formData.name.trim()) errors.name = "Tên album không được để trống";
+    if (!formData.singerId) errors.singerId = "Vui lòng chọn ca sĩ";
+    
+    if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        return;
     }
 
-    const data = new FormData();
-    data.append("name", formData.name.trim());
-    data.append("singerId", formData.singerId);
-
-    if (formData.year) {
-      data.append("releaseDate", `${formData.year}-01-01`);
-    }
-
-    if (formData.description) data.append("description", formData.description.trim());
-    if (formData.coverUrl) data.append("cover", formData.coverUrl);
+    setIsSubmitting(true);
 
     try {
-      setIsSubmitting(true);
+      const data = new FormData();
+      data.append("name", formData.name.trim());
+      data.append("singerId", formData.singerId);
+      if (formData.year) data.append("releaseDate", `${formData.year}-01-01`);
+      if (formData.description) data.append("description", formData.description.trim());
+      if (formData.coverUrl) data.append("cover", formData.coverUrl);
+
       if (isEdit) {
         await axios.put(`/albums/${album.albumId || album._id}`, data, {
           headers: { "Content-Type": "multipart/form-data" },
@@ -101,27 +135,30 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
       }
       onClose();
     } catch (err) {
-      console.error("❌ Album submit error:", err);
-      onError?.(err.response?.data?.message || "Lỗi khi lưu album!");
+      console.error("❌ Submit error:", err);
+      const errorMsg = err.response?.data?.message || "Lỗi khi lưu dữ liệu!";
+      onError?.(errorMsg);
+      if (err.response?.data?.errors) setValidationErrors(err.response.data.errors);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const ErrorMessage = ({ error }) => {
+    if (!error) return null;
+    return <div className="flex items-center gap-1 mt-1 text-xs text-red-400"><AlertCircle size={12}/><span>{error}</span></div>;
+  };
+
+  // Custom style cho Select để khớp với theme cũ
   const customSelectStyles = {
-    control: (base) => ({
+    control: (base, state) => ({
       ...base,
       backgroundColor: "#2a2a2a",
-      borderColor: "#555",
+      borderColor: state.isFocused ? (validationErrors.singerId ? "#ef4444" : "#fff") : "#555",
       color: "white",
       borderRadius: 8,
     }),
-    menu: (base) => ({
-      ...base,
-      backgroundColor: "#2a2a2a",
-      color: "white",
-      zIndex: 9999,
-    }),
+    menu: (base) => ({ ...base, backgroundColor: "#2a2a2a", zIndex: 9999 }),
     option: (base, state) => ({
       ...base,
       backgroundColor: state.isFocused ? "#3a3a3a" : "#2a2a2a",
@@ -129,150 +166,141 @@ const AlbumForm = ({ isEdit = false, album = null, onClose, onSuccess, onError }
       cursor: "pointer",
     }),
     singleValue: (base) => ({ ...base, color: "white" }),
-    placeholder: (base) => ({ ...base, color: "#aaa" }),
     input: (base) => ({ ...base, color: "white" }),
   };
 
+  // Custom label hiển thị ảnh trong dropdown
+  const formatOptionLabel = ({ label, image }) => (
+    <div className="flex items-center gap-2">
+      <img src={image || "https://via.placeholder.com/30"} alt="" className="w-6 h-6 rounded-full object-cover"/>
+      <span>{label}</span>
+    </div>
+  );
+
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-[#1a1a1a] text-white rounded-2xl shadow-lg w-[480px] max-h-[90vh] overflow-y-auto p-6 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl bg-[#1a1a1a] p-6 text-white shadow-lg">
         {/* Nút đóng */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-white transition"
           disabled={isSubmitting}
+          className="absolute right-3 top-3 text-gray-400 hover:text-white"
         >
           <X size={20} />
         </button>
 
-        <h2 className="text-xl font-bold text-center mb-6">
-          {isEdit ? "Chỉnh sửa Album" : "Thêm Album"}
+        {/* Tiêu đề */}
+        <h2 className="mb-6 text-center text-xl font-bold">
+          {isEdit ? "Sửa Album" : "Thêm Album"}
         </h2>
 
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* 🔸 Tên Album */}
+          {/* Tên Album */}
           <div>
-            <label className="block mb-1 text-sm text-gray-300">
-              Tên Album <span className="text-red-500">*</span>
-            </label>
+            <label className="mb-1 block text-sm text-gray-300">Tên Album <span className="text-red-500">*</span></label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
               placeholder="Nhập tên album..."
-              className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-[#2a2a2a] text-white placeholder-gray-400 focus:ring-2 focus:ring-white focus:outline-none"
               disabled={isSubmitting}
+              className={`w-full rounded-lg border ${validationErrors.name ? 'border-red-500' : 'border-gray-700'} bg-[#2a2a2a] px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white`}
             />
+            <ErrorMessage error={validationErrors.name} />
           </div>
 
-          {/* 🔸 Ca sĩ */}
+          {/* Nghệ sĩ */}
           <div>
-            <label className="block mb-1 text-sm text-gray-300">
-              Ca sĩ <span className="text-red-500">*</span>
-            </label>
+            <label className="mb-1 block text-sm text-gray-300">Nghệ sĩ <span className="text-red-500">*</span></label>
             <Select
-              options={singers.map((s) => ({
-                value: s.singerId || s._id,
-                label: s.name,
-              }))}
+              options={singers.map((s) => ({ value: s.singerId || s._id, label: s.name, image: s.imageUrl }))}
               styles={customSelectStyles}
-              value={
-                singers.find((s) => (s.singerId || s._id) === formData.singerId)
-                  ? {
-                      value: formData.singerId,
-                      label: singers.find((s) => (s.singerId || s._id) === formData.singerId).name,
-                    }
-                  : null
-              }
-              onChange={(opt) => setFormData({ ...formData, singerId: opt ? opt.value : "" })}
-              placeholder="Chọn ca sĩ..."
-              isClearable
+              formatOptionLabel={formatOptionLabel}
+              value={singers.map(s => ({value: s.singerId||s._id, label: s.name, image: s.imageUrl})).find(op => op.value === formData.singerId)}
+              onChange={(opt) => {
+                setFormData({ ...formData, singerId: opt ? opt.value : "" });
+                setValidationErrors({ ...validationErrors, singerId: null });
+              }}
+              placeholder="Chọn nghệ sĩ..."
               isDisabled={isSubmitting}
             />
+            <ErrorMessage error={validationErrors.singerId} />
           </div>
 
-          {/* 🔸 Năm phát hành */}
+          {/* Năm phát hành */}
           <div>
-            <label className="block mb-1 text-sm text-gray-300">Năm phát hành</label>
+            <label className="mb-1 block text-sm text-gray-300">Năm phát hành</label>
             <input
               type="number"
               name="year"
-              min="1900"
-              max={new Date().getFullYear()}
+              min={MIN_YEAR}
+              max={MAX_YEAR}
               value={formData.year}
               onChange={handleChange}
-              placeholder="Nhập năm phát hành..."
-              className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-[#2a2a2a] text-white placeholder-gray-400 focus:ring-2 focus:ring-white focus:outline-none"
+              placeholder={`VD: ${new Date().getFullYear()}`}
               disabled={isSubmitting}
+              className="w-full rounded-lg border border-gray-700 bg-[#2a2a2a] px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white"
             />
           </div>
 
-          {/* 🔸 Mô tả */}
+          {/* Mô tả */}
           <div>
-            <label className="block mb-1 text-sm text-gray-300">Mô tả</label>
+            <label className="mb-1 block text-sm text-gray-300">Mô tả</label>
             <textarea
-              rows="4"
               name="description"
+              rows="3"
               value={formData.description}
               onChange={handleChange}
-              placeholder="Nhập mô tả album..."
-              className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-[#2a2a2a] text-white placeholder-gray-400 resize-none focus:ring-2 focus:ring-white focus:outline-none"
+              placeholder="Mô tả..."
               disabled={isSubmitting}
+              className="w-full resize-none rounded-lg border border-gray-700 bg-[#2a2a2a] px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white"
             />
           </div>
 
-          {/* 🔸 Ảnh bìa */}
+          {/* Ảnh bìa */}
           <div>
-            <label className="block mb-1 text-sm text-gray-300">Ảnh bìa</label>
-            <label className="flex items-center justify-center px-3 py-2 bg-white text-black hover:bg-gray-200 rounded-lg cursor-pointer text-sm transition">
-              Chọn ảnh
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileChange}
-                disabled={isSubmitting}
-              />
+            <label className="mb-2 block text-sm text-gray-300">Ảnh bìa</label>
+            
+            {(coverPreview || (isEdit && album?.coverUrl)) && (
+              <div className="mb-3 flex justify-center">
+                <div className="relative">
+                  <img src={coverPreview || album?.coverUrl} alt="Preview" className="w-24 h-24 object-cover rounded-lg border-2 border-gray-600"/>
+                  {coverPreview && (
+                    <button type="button" onClick={clearImage} className="absolute -top-2 -right-2 bg-red-500 p-1 rounded-full text-white hover:bg-red-600 transition">
+                      <X size={14}/>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <label className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
+                validationErrors.coverUrl ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-white hover:bg-gray-200 text-black'
+            } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              <ImagePlus size={18} />
+              {coverFileName || "Chọn ảnh"}
+              <input type="file" accept={ALLOWED_IMAGE_TYPES.join(',')} className="hidden" onChange={handleFileChange} disabled={isSubmitting} />
             </label>
-
-            {coverFileName && (
-              <p className="text-xs text-gray-400 mt-1 truncate" title={coverFileName}>
-                📁 {coverFileName}
-              </p>
-            )}
-
-            {isEdit && album?.coverUrl && !coverFileName && (
-              <p className="text-xs text-gray-400 mt-1 truncate">
-                Ảnh hiện tại:{" "}
-                <a
-                  href={album.coverUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-400 hover:underline"
-                >
-                  Xem ảnh
-                </a>
-              </p>
-            )}
           </div>
 
-          {/* 🔸 Buttons */}
+          {/* Buttons */}
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-gray-600 hover:bg-gray-800 text-white transition"
+              className="rounded-lg border border-gray-600 px-4 py-2 text-white hover:bg-gray-800"
               disabled={isSubmitting}
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-lg bg-white text-black hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="rounded-lg bg-white px-4 py-2 text-black hover:bg-gray-200 disabled:opacity-50"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Đang xử lý..." : isEdit ? "Cập nhật" : "Thêm"}
+              {isSubmitting ? "Đang xử lý..." : isEdit ? "Lưu" : "Thêm"}
             </button>
           </div>
         </form>

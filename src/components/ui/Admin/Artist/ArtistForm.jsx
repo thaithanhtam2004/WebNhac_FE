@@ -1,8 +1,9 @@
-import { X } from "lucide-react";
+import { X, AlertCircle, ImagePlus } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "../../../../configs/apiConfig";
 
 const ArtistForm = ({ isEdit = false, singer = null, onClose, onSuccess, onError }) => {
+  // State giữ nguyên như cũ
   const [formData, setFormData] = useState({
     name: "",
     bio: "",
@@ -10,9 +11,17 @@ const ArtistForm = ({ isEdit = false, singer = null, onClose, onSuccess, onError
   });
 
   const [imageFileName, setImageFileName] = useState("");
+  const [imagePreview, setImagePreview] = useState(null); // Thêm preview nhẹ để UX tốt hơn (không ảnh hưởng layout)
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
 
-  // Load dữ liệu khi chỉnh sửa
+  // Constants
+  const MAX_NAME_LENGTH = 100;
+  const MAX_BIO_LENGTH = 2000;
+  const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+
+  // Load data khi edit
   useEffect(() => {
     if (isEdit && singer) {
       setFormData({
@@ -21,65 +30,120 @@ const ArtistForm = ({ isEdit = false, singer = null, onClose, onSuccess, onError
         image: null,
       });
       setImageFileName("");
+      setImagePreview(null);
+      setValidationErrors({});
     }
   }, [isEdit, singer]);
 
-  // Xử lý thay đổi input
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Handle change input text
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    if (validationErrors[name]) {
+      setValidationErrors({ ...validationErrors, [name]: null });
+    }
+  };
 
-  // Xử lý chọn file ảnh
+  // Handle change file ảnh
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Validate size
+    if (file.size > MAX_IMAGE_SIZE) {
+      onError?.("Dung lượng ảnh không được vượt quá 5MB");
+      e.target.value = "";
+      return;
+    }
+
+    // Validate type
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      onError?.("Chỉ chấp nhận file ảnh (JPG, PNG, GIF...)");
+      e.target.value = "";
+      return;
+    }
+
     setFormData({ ...formData, image: file });
     setImageFileName(file.name);
+    setValidationErrors({ ...validationErrors, image: null });
+
+    // Preview
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
   };
 
-  // Gửi form
+  const clearImage = () => {
+    setFormData({ ...formData, image: null });
+    setImageFileName("");
+    setImagePreview(null);
+  };
+
+  // Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
+    // Validate cơ bản
     if (!formData.name.trim()) {
-      return onError?.("Vui lòng nhập tên nghệ sĩ!");
+        setValidationErrors({...validationErrors, name: "Tên không được để trống"});
+        return;
     }
 
     setIsSubmitting(true);
+
     try {
       const data = new FormData();
       data.append("name", formData.name.trim());
-      if (formData.bio?.trim()) data.append("bio", formData.bio.trim());
+      if (formData.bio) data.append("bio", formData.bio.trim());
       if (formData.image) data.append("image", formData.image);
 
       if (isEdit) {
-        await axios.put(`/singers/${singer.singerId}`, data, {
+        // Update
+        await axios.put(`/singers/${singer.singerId || singer._id}`, data, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         onSuccess?.("Cập nhật nghệ sĩ thành công!");
       } else {
+        // Create
         await axios.post("/singers", data, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         onSuccess?.("Thêm nghệ sĩ thành công!");
       }
-
       onClose();
     } catch (err) {
       console.error("❌ Submit error:", err);
-      onError?.(err.response?.data?.message || "Lỗi khi lưu nghệ sĩ!");
+      // Lấy message lỗi từ Backend trả về
+      const errorMsg = err.response?.data?.message || "Lỗi khi lưu dữ liệu!";
+      onError?.(errorMsg);
+      
+      if (err.response?.data?.errors) {
+        setValidationErrors(err.response.data.errors);
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const ErrorMessage = ({ error }) => {
+    if (!error) return null;
+    return (
+      <div className="flex items-center gap-1 mt-1 text-xs text-red-400">
+        <AlertCircle size={12} />
+        <span>{error}</span>
+      </div>
+    );
+  };
+
+  // --- GIAO DIỆN CŨ CỦA BẠN ---
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="relative w-[480px] max-h-[90vh] overflow-y-auto rounded-2xl bg-[#1a1a1a] p-6 text-white shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl bg-[#1a1a1a] p-6 text-white shadow-lg">
         {/* Nút đóng */}
         <button
           onClick={onClose}
           disabled={isSubmitting}
-          className="absolute right-3 top-3 text-gray-400 transition hover:text-white disabled:opacity-50"
+          className="absolute right-3 top-3 text-gray-400 transition hover:text-white disabled:opacity-50 z-10"
         >
           <X size={20} />
         </button>
@@ -101,67 +165,103 @@ const ArtistForm = ({ isEdit = false, singer = null, onClose, onSuccess, onError
               name="name"
               value={formData.name}
               onChange={handleChange}
+              maxLength={MAX_NAME_LENGTH}
               placeholder="Nhập tên nghệ sĩ..."
-              required
               disabled={isSubmitting}
-              className="w-full rounded-lg border border-gray-700 bg-[#2a2a2a] px-3 py-2 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+              className={`w-full rounded-lg border ${
+                validationErrors.name ? 'border-red-500' : 'border-gray-700'
+              } bg-[#2a2a2a] px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-white focus:outline-none`}
             />
+            <div className="flex justify-between items-start">
+              <ErrorMessage error={validationErrors.name} />
+              <span className="text-xs text-gray-500 mt-1">
+                {formData.name.length}/{MAX_NAME_LENGTH}
+              </span>
+            </div>
           </div>
 
           {/* Mô tả */}
           <div>
-            <label className="mb-1 block text-sm text-gray-300">Mô tả</label>
+            <label className="mb-1 block text-sm text-gray-300">
+              Mô tả / Tiểu sử
+            </label>
             <textarea
               name="bio"
-              rows="4"
+              rows="5"
               value={formData.bio}
               onChange={handleChange}
+              maxLength={MAX_BIO_LENGTH}
               placeholder="Nhập mô tả về nghệ sĩ..."
               disabled={isSubmitting}
-              className="w-full resize-none rounded-lg border border-gray-700 bg-[#2a2a2a] px-3 py-2 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+              className="w-full resize-none rounded-lg border border-gray-700 bg-[#2a2a2a] px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-white focus:outline-none"
             />
+             <div className="text-right text-xs text-gray-500 mt-1">
+                {formData.bio?.length || 0}/{MAX_BIO_LENGTH}
+             </div>
           </div>
 
           {/* Ảnh đại diện */}
           <div>
-            <label className="mb-1 block text-sm text-gray-300">
+            <label className="mb-2 block text-sm text-gray-300">
               Ảnh đại diện
             </label>
-            <label className="flex cursor-pointer items-center justify-center rounded-lg bg-white px-3 py-2 text-sm text-black transition hover:bg-gray-200">
-              Chọn ảnh
+
+            {/* Preview ảnh (Giữ layout cũ nhưng thêm ảnh hiện ra cho dễ nhìn) */}
+            {(imagePreview || (isEdit && singer?.imageUrl)) && (
+              <div className="mb-3 flex justify-center">
+                <div className="relative">
+                  <img
+                    src={imagePreview || singer?.imageUrl}
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded-full border-4 border-gray-700"
+                  />
+                  {imagePreview && (
+                    <button
+                      type="button"
+                      onClick={clearImage}
+                      disabled={isSubmitting}
+                      className="absolute -top-2 -right-2 p-1 bg-red-500 hover:bg-red-600 rounded-full text-white transition"
+                      title="Xóa ảnh"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Upload button cũ */}
+            <label className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
+              validationErrors.image 
+                ? 'bg-red-600 hover:bg-red-700 text-white' 
+                : 'bg-white hover:bg-gray-200 text-black'
+            } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              <ImagePlus size={18} />
+              {imageFileName ? 'Đổi ảnh khác' : 'Chọn ảnh'}
               <input
                 type="file"
-                accept="image/*"
+                accept={ALLOWED_IMAGE_TYPES.join(',')}
                 className="hidden"
                 onChange={handleFileChange}
                 disabled={isSubmitting}
               />
             </label>
 
-            {/* Tên file ảnh mới */}
+            {/* File info */}
             {imageFileName && (
-              <p
-                className="mt-1 truncate text-xs text-gray-400"
-                title={imageFileName}
-              >
-                📁 {imageFileName}
+              <p className="mt-1 truncate text-xs text-green-400">
+                ✓ {imageFileName}
               </p>
             )}
 
-            {/* Ảnh hiện tại */}
-            {isEdit && singer?.imageUrl && !imageFileName && (
+            {/* Link ảnh hiện tại khi edit */}
+            {isEdit && singer?.imageUrl && !imageFileName && !imagePreview && (
               <p className="mt-1 truncate text-xs text-gray-400">
-                Ảnh hiện tại:{" "}
-                <a
-                  href={singer.imageUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-400 hover:underline"
-                >
-                  Xem ảnh
-                </a>
+                Ảnh hiện tại: <span className="text-blue-400">Đang hiển thị</span>
               </p>
             )}
+
+            <ErrorMessage error={validationErrors.image} />
           </div>
 
           {/* Nút hành động */}
