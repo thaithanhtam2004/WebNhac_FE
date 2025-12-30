@@ -50,7 +50,7 @@ export default function AlbumListPage() {
         {albums.map((album) => (
           <AlbumCard
             key={album.albumId}
-            title={album.name}
+            title={album.title}
             artist={album.singerName}
             coverUrl={album.coverUrl}
             trackCount={album.trackCount}

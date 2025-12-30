@@ -1,17 +1,16 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, X, Music, User, Disc3, Album } from "lucide-react"; // ✅ Thêm Album icon
+import { Search, X, Music, User, Disc3, Album } from "lucide-react";
 import { searchAll } from "../../services/songService";
 import { useNavigate } from "react-router-dom";
 
 export default function SearchBar({ onSelectSong }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
-  // ✅ Thêm albums vào state
   const [results, setResults] = useState({ 
     songs: [], 
     singers: [], 
     genres: [],
-    albums: [] // Thêm albums
+    albums: []
   });
   const [loading, setLoading] = useState(false);
   const searchRef = useRef(null);
@@ -40,17 +39,19 @@ export default function SearchBar({ onSelectSong }) {
       try {
         const response = await searchAll(searchQuery);
         
-        // ✅ Log để debug
         console.log("🔍 Search response:", response);
         
-        // ✅ Đảm bảo có albums trong kết quả
+        // ✅ FIX: Sửa lại cách lấy data
+        // response structure: { success: true, data: { songs: [], singers: [], genres: [], albums: [] } }
+        const resultData = response.data || {};
+
         setResults({
-          songs: response.data?.songs || [],
-          singers: response.data?.singers || [],
-          genres: response.data?.genres || [],
-          albums: response.data?.albums || [] // Thêm albums
+          songs: resultData.songs || [],
+          singers: resultData.singers || [],
+          genres: resultData.genres || [],
+          albums: resultData.albums || []
         });
-        
+    
         setShowResults(true);
       } catch (error) {
         console.error("❌ Search error:", error);
@@ -64,19 +65,17 @@ export default function SearchBar({ onSelectSong }) {
   }, [searchQuery]);
 
   const handleSelectSong = (song) => {
-    console.log("🎵 Song selected:", song); // ✅ Debug log
+    console.log("🎵 Song selected:", song);
     
     setShowResults(false);
     setSearchQuery("");
     
-    // ✅ Kiểm tra onSelectSong có tồn tại không
     if (!onSelectSong) {
       console.error("❌ onSelectSong callback không được truyền vào!");
       alert("Lỗi: Không thể phát nhạc. Component cha chưa truyền prop onSelectSong.");
       return;
     }
 
-    // ✅ Kiểm tra fileUrl có tồn tại không
     if (!song.fileUrl) {
       console.error("❌ Bài hát không có fileUrl:", song);
       alert("Bài hát này không có file âm thanh!");
@@ -92,7 +91,7 @@ export default function SearchBar({ onSelectSong }) {
       duration: song.duration,
     };
 
-    console.log("✅ Formatted song:", formattedSong); // ✅ Debug log
+    console.log("✅ Formatted song:", formattedSong);
     
     try {
       onSelectSong(formattedSong);
@@ -117,7 +116,6 @@ export default function SearchBar({ onSelectSong }) {
     navigate(`/genre/${genre.genreId}`);
   };
 
-  // ✅ Handler cho album
   const handleSelectAlbum = (album) => {
     console.log("💿 Album selected:", album);
     setShowResults(false);
@@ -131,7 +129,6 @@ export default function SearchBar({ onSelectSong }) {
     setShowResults(false);
   };
 
-  // ✅ Thêm albums vào hasResults
   const hasResults = 
     results.songs?.length > 0 || 
     results.singers?.length > 0 || 
@@ -228,7 +225,7 @@ export default function SearchBar({ onSelectSong }) {
                 </div>
               )}
 
-              {/* ✅ ALBUM - THÊM MỚI */}
+              {/* ALBUM */}
               {results.albums && results.albums.length > 0 && (
                 <div className="mb-3">
                   <div className="px-4 py-2 text-xs text-gray-400 font-bold uppercase tracking-wider">
@@ -306,7 +303,6 @@ export default function SearchBar({ onSelectSong }) {
                           {song.singerName}
                         </p>
                       </div>
-                      {/* ✅ Indicator nếu không có fileUrl */}
                       {!song.fileUrl && (
                         <div className="text-xs text-red-400 bg-red-400/10 px-2 py-1 rounded">
                           No audio

@@ -9,19 +9,19 @@ import RegisterPage from "../components/pages/Auth/RegisterPage";
 import Login from "../components/pages/Auth/Login";
 import ForgotPassword from "../components/pages/Auth/ForgotPassword";
 import FavoritesPage from "../components/pages/HomePage/FavoritesPage";
-
 import HistoryPage from "../components/pages/HomePage/HistoryPage";
 import AlbumPage from "../components/pages/HomePage/AlbumPage";
 import AlbumListPage from "../components/pages/HomePage/AlbumListPage";
-import PlaylistListPage from "../components/pages/HomePage/PlaylistListPage"; // danh sách playlist
-import PlaylistPage from "../components/pages/HomePage/Playlist"; // chi tiết playlist
-
+import PlaylistListPage from "../components/pages/HomePage/PlaylistListPage";
+import PlaylistPage from "../components/pages/HomePage/Playlist";
 import VerifyOTPPage from "../components/pages/Auth/VerifyOTPPage";
 import ResetPasswordPage from "../components/pages/Auth/ResetPasswordPage";
-
 import SearchResultsPage from "../components/pages/HomePage/SearchResult";
 import LatestSongsPage from "../components/pages/HomePage/LastestPage";
-import LyricsPage from "../components/pages/HomePage/LyricsPage"; // ✅ THÊM MỚI
+import LyricsPage from "../components/pages/HomePage/LyricsPage";
+
+// ✅ THÊM IMPORT NÀY
+import CategoryPage from "../components/pages/HomePage/CategoryPage";
 
 import Dashboard from "../components/pages/Admin/Dashboard";
 import Songs from "../components/pages/Admin/ManageSong";
@@ -54,26 +54,31 @@ const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: "playlistlist", element: <PlaylistListPage /> }, // danh sách playlist
-      { path: "playlists/:playlistId", element: <PlaylistPage /> }, // chi tiết playlist
+      { path: "playlistlist", element: <PlaylistListPage /> },
+      { path: "playlists/:playlistId", element: <PlaylistPage /> },
       { path: "favorites", element: <FavoritesPage /> },
       { path: "history", element: <HistoryPage /> },
       { path: "albums", element: <AlbumListPage /> },
       { path: "albums/:albumId", element: <AlbumPage /> },
-      { path: "lyrics/:songId", element: <LyricsPage /> }, // ✅ THÊM ROUTE LYRICS
+      { path: "lyrics/:songId", element: <LyricsPage /> },
       { path: "profile", element: <Profile /> },
       { path: "result", element: <SearchResultsPage /> },
       { path: "latest", element: <LatestSongsPage /> },
+      
+      // ✅ THÊM 3 ROUTES NÀY
+      { path: "singer/:id", element: <CategoryPage /> },
+      { path: "genre/:id", element: <CategoryPage /> },
+      { path: "album/:id", element: <CategoryPage /> },
     ],
   },
 
   // 🔹 Admin routes
   {
     path: "/admin",
-    element: <AdminGuard />, // 👈 guard riêng
+    element: <AdminGuard />,
     children: [
       {
-        element: <AdminLayout />, // 👈 layout riêng
+        element: <AdminLayout />,
         children: [
           { index: true, element: <Dashboard /> },
           { path: "songs", element: <Songs /> },

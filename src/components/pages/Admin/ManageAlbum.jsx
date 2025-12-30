@@ -571,7 +571,7 @@ export default function Albums() {
                       {startIndex + index + 1}
                     </td>
                     <td className="px-6 py-3 text-gray-800 font-medium truncate max-w-[200px]">
-                      {album?.name || "—"}
+                      {album?.name || album?.title || album?.albumName || "—"}
                     </td>
                     <td className="px-6 py-3 text-gray-700 truncate max-w-[150px]">
                       {album?.singerName || "—"}

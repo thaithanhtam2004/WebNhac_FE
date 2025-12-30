@@ -42,7 +42,7 @@ export default function AlbumCard({ title, artist, coverUrl, onClick, songCount 
       <div className="mb-2">
         <h3
           className="text-white font-bold text-base mb-1 truncate"
-          title={title}
+          title={title || "Unknown Album"}
         >
           {title}
         </h3>

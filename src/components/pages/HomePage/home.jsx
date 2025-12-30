@@ -105,7 +105,7 @@ export default function HomePage() {
   const renderAlbumCard = useCallback((album) => (
     <AlbumCard
       key={album.albumId}
-      title={album.name}
+      title={album.title}
       artist={album.singerName}
       coverUrl={album.coverUrl}
       onClick={() => navigate(`/albums/${album.albumId}`)}

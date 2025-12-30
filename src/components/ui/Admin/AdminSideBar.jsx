@@ -1,5 +1,5 @@
 // src/components/ui/Admin/AdminSideBar.jsx
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Music,
@@ -9,9 +9,12 @@ import {
   Tag,
   LogOut,
   Brain,
+  Home, // ✅ 1. Import thêm icon Home
 } from "lucide-react";
 
 export default function AdminSidebar() {
+  const navigate = useNavigate();
+
   const menuItems = [
     { to: "/admin", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
     { to: "/admin/songs", label: "Quản lý bài hát", icon: <Music className="w-5 h-5" /> },
@@ -19,12 +22,15 @@ export default function AdminSidebar() {
     { to: "/admin/genres", label: "Quản lý thể loại", icon: <Tag className="w-5 h-5" /> },
     { to: "/admin/albums", label: "Quản lý album", icon: <Disc className="w-5 h-5" /> },
     { to: "/admin/listeners", label: "Quản lý người nghe", icon: <UserCircle2 className="w-5 h-5" /> },
-    { to: "/admin/classify", label: "Phân lớp bài hát", icon: <LogOut className="w-5 h-5" /> },
+    { to: "/admin/classify", label: "Phân lớp bài hát", icon: <Brain className="w-5 h-5" /> },
   ];
 
   const handleLogout = () => {
-    console.log("Đăng xuất...");
-    // TODO: Implement logout logic
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
+    console.log("Đã đăng xuất");
+    navigate("/auth/login");
   };
 
   return (
@@ -49,7 +55,7 @@ export default function AdminSidebar() {
         </div>
       </div>
 
-      {/* Menu */}
+      {/* Menu chính */}
       <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
         {menuItems.map((item) => (
           <NavLink
@@ -57,10 +63,10 @@ export default function AdminSidebar() {
             to={item.to}
             end
             className={({ isActive }) =>
-              `flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold ${
+              `flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
                 isActive
-                  ? "bg-gray-800 text-white border border-cyan-500"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                  ? "bg-gray-800 text-white border border-cyan-500 shadow-lg shadow-cyan-500/20"
+                  : "text-gray-400 hover:bg-gray-800 hover:text-white"
               }`
             }
           >
@@ -70,11 +76,22 @@ export default function AdminSidebar() {
         ))}
       </nav>
 
-      {/* Logout */}
-      <div className="px-3 py-6 border-t border-gray-800">
+      {/* ✅ 2. Bổ sung nút Về Trang Chủ và Đăng Xuất */}
+      <div className="px-3 py-4 border-t border-gray-800 space-y-2">
+        
+        {/* Nút chuyển về trang chủ */}
+        <NavLink
+          to="/"
+          className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold text-cyan-400 hover:bg-gray-800 transition-all duration-200"
+        >
+          <Home className="w-5 h-5" />
+          <span>Về trang chủ</span>
+        </NavLink>
+
+        {/* Nút Đăng xuất */}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-4 w-full px-4 py-3 rounded-xl text-sm font-semibold bg-white text-gray-900 hover:bg-gray-200"
+          className="flex items-center gap-4 w-full px-4 py-3 rounded-xl text-sm font-semibold bg-white text-gray-900 hover:bg-gray-200 transition-colors duration-200"
         >
           <LogOut className="w-5 h-5" />
           <span>Đăng xuất</span>
