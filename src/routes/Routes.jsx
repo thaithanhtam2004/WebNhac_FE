@@ -70,16 +70,21 @@ const router = createBrowserRouter([
   // 🔹 Admin routes
   {
     path: "/admin",
-    element: <AdminGuard />,
+    element: <AdminGuard />, // 👈 guard riêng
     children: [
-      { index: true, element: <Dashboard /> },
-      { path: "songs", element: <Songs /> },
-      { path: "artists", element: <Artists /> },
-      { path: "genres", element: <Genres /> },
-      { path: "albums", element: <Albums /> },
-      { path: "listeners", element: <Listeners /> },
-      { path: "features", element: <Features /> },
-      { path: "classify", element: <ClassifySongEmotion /> },
+      {
+        element: <AdminLayout />, // 👈 layout riêng
+        children: [
+          { index: true, element: <Dashboard /> },
+          { path: "songs", element: <Songs /> },
+          { path: "artists", element: <Artists /> },
+          { path: "genres", element: <Genres /> },
+          { path: "albums", element: <Albums /> },
+          { path: "listeners", element: <Listeners /> },
+          { path: "features", element: <Features /> },
+          { path: "classify", element: <ClassifySongEmotion /> },
+        ],
+      },
     ],
   },
 ]);
