@@ -48,4 +48,11 @@ export async function predictSongEmotion(songId, file) {
     console.error("❌ Lỗi dự đoán cảm xúc:", err);
     throw err.response?.data || { message: "Dự đoán cảm xúc thất bại" };
   }
+
+  
 }
+export async function getEmotionNameBySongId(songId) {
+  const res = await axios.get(`${BASE_URL}/emotion-name/${songId}`);
+  return res.data.data; // ✅ chỉ trả { songId, emotionId, emotionName }
+}
+
