@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom"; // ✅ import hook điều hư�
 
 const menuItems = [
   { icon: Home, label: "Trang chủ", path: "/" },
-  { icon: Music, label: "Playlist cá nhân", path: "/playlistlist" }, // ✅ trang playlist
+  { icon: Music, label: "Playlist cá nhân", path: "/playlistlist" },
   { icon: Clock, label: "Lịch sử nghe", path: "/history" },
   { icon: Heart, label: "Yêu thích", path: "/favorites" },
 ];
 
 export default function Sidebar() {
-  const navigate = useNavigate(); // ✅ khởi tạo điều hướng
+  const navigate = useNavigate();
 
   return (
     <aside className="w-64 h-screen p-8 flex flex-col justify-between text-white bg-black/70 backdrop-blur-lg shadow-2xl border-r border-gray-800">
