@@ -1,12 +1,18 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, X, Music, User, Disc3 } from "lucide-react";
+import { Search, X, Music, User, Disc3, Album } from "lucide-react"; // ✅ Thêm Album icon
 import { searchAll } from "../../services/songService";
 import { useNavigate } from "react-router-dom";
 
 export default function SearchBar({ onSelectSong }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const [results, setResults] = useState({ songs: [], singers: [], genres: [] });
+  // ✅ Thêm albums vào state
+  const [results, setResults] = useState({ 
+    songs: [], 
+    singers: [], 
+    genres: [],
+    albums: [] // Thêm albums
+  });
   const [loading, setLoading] = useState(false);
   const searchRef = useRef(null);
   const navigate = useNavigate();
@@ -25,7 +31,7 @@ export default function SearchBar({ onSelectSong }) {
   useEffect(() => {
     const searchDebounce = setTimeout(async () => {
       if (searchQuery.trim() === "") {
-        setResults({ songs: [], singers: [], genres: [] });
+        setResults({ songs: [], singers: [], genres: [], albums: [] });
         setShowResults(false);
         return;
       }
@@ -33,11 +39,22 @@ export default function SearchBar({ onSelectSong }) {
       setLoading(true);
       try {
         const response = await searchAll(searchQuery);
-        setResults(response.data || { songs: [], singers: [], genres: [] });
+        
+        // ✅ Log để debug
+        console.log("🔍 Search response:", response);
+        
+        // ✅ Đảm bảo có albums trong kết quả
+        setResults({
+          songs: response.data?.songs || [],
+          singers: response.data?.singers || [],
+          genres: response.data?.genres || [],
+          albums: response.data?.albums || [] // Thêm albums
+        });
+        
         setShowResults(true);
       } catch (error) {
-        console.error("Search error:", error);
-        setResults({ songs: [], singers: [], genres: [] });
+        console.error("❌ Search error:", error);
+        setResults({ songs: [], singers: [], genres: [], albums: [] });
       } finally {
         setLoading(false);
       }
@@ -47,41 +64,79 @@ export default function SearchBar({ onSelectSong }) {
   }, [searchQuery]);
 
   const handleSelectSong = (song) => {
+    console.log("🎵 Song selected:", song); // ✅ Debug log
+    
     setShowResults(false);
     setSearchQuery("");
     
-    if (onSelectSong) {
-      const formattedSong = {
-        songId: song.songId,
-        title: song.title,
-        artist: song.singerName || "Unknown Artist",
-        fileUrl: song.fileUrl,
-        coverUrl: song.coverUrl,
-        duration: song.duration,
-      };
+    // ✅ Kiểm tra onSelectSong có tồn tại không
+    if (!onSelectSong) {
+      console.error("❌ onSelectSong callback không được truyền vào!");
+      alert("Lỗi: Không thể phát nhạc. Component cha chưa truyền prop onSelectSong.");
+      return;
+    }
+
+    // ✅ Kiểm tra fileUrl có tồn tại không
+    if (!song.fileUrl) {
+      console.error("❌ Bài hát không có fileUrl:", song);
+      alert("Bài hát này không có file âm thanh!");
+      return;
+    }
+
+    const formattedSong = {
+      songId: song.songId,
+      title: song.title,
+      artist: song.singerName || "Unknown Artist",
+      fileUrl: song.fileUrl,
+      coverUrl: song.coverUrl,
+      duration: song.duration,
+    };
+
+    console.log("✅ Formatted song:", formattedSong); // ✅ Debug log
+    
+    try {
       onSelectSong(formattedSong);
+      console.log("✅ onSelectSong callback executed successfully");
+    } catch (error) {
+      console.error("❌ Error calling onSelectSong:", error);
+      alert("Có lỗi khi phát nhạc!");
     }
   };
 
   const handleSelectSinger = (singer) => {
+    console.log("👤 Singer selected:", singer);
     setShowResults(false);
     setSearchQuery("");
     navigate(`/singer/${singer.singerId}`);
   };
 
   const handleSelectGenre = (genre) => {
+    console.log("🎸 Genre selected:", genre);
     setShowResults(false);
     setSearchQuery("");
     navigate(`/genre/${genre.genreId}`);
   };
 
+  // ✅ Handler cho album
+  const handleSelectAlbum = (album) => {
+    console.log("💿 Album selected:", album);
+    setShowResults(false);
+    setSearchQuery("");
+    navigate(`/album/${album.albumId}`);
+  };
+
   const clearSearch = () => {
     setSearchQuery("");
-    setResults({ songs: [], singers: [], genres: [] });
+    setResults({ songs: [], singers: [], genres: [], albums: [] });
     setShowResults(false);
   };
 
-  const hasResults = results.songs?.length > 0 || results.singers?.length > 0 || results.genres?.length > 0;
+  // ✅ Thêm albums vào hasResults
+  const hasResults = 
+    results.songs?.length > 0 || 
+    results.singers?.length > 0 || 
+    results.genres?.length > 0 ||
+    results.albums?.length > 0;
 
   return (
     <div className="w-full" ref={searchRef}>
@@ -173,6 +228,48 @@ export default function SearchBar({ onSelectSong }) {
                 </div>
               )}
 
+              {/* ✅ ALBUM - THÊM MỚI */}
+              {results.albums && results.albums.length > 0 && (
+                <div className="mb-3">
+                  <div className="px-4 py-2 text-xs text-gray-400 font-bold uppercase tracking-wider">
+                    Album
+                  </div>
+                  {results.albums.map((album) => (
+                    <div
+                      key={album.albumId}
+                      onClick={() => handleSelectAlbum(album)}
+                      className="flex items-center gap-3 px-4 py-3 
+                                 hover:bg-[#3e3e3e] cursor-pointer 
+                                 transition-colors group"
+                    >
+                      <div className="w-12 h-12 rounded overflow-hidden bg-[#1a1a1a] 
+                                    flex-shrink-0 shadow-md">
+                        {album.coverUrl ? (
+                          <img
+                            src={album.coverUrl}
+                            alt={album.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-600 to-red-600">
+                            <Album className="w-6 h-6 text-white" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-white text-sm font-semibold truncate 
+                                     group-hover:text-[#1ed760] transition-colors">
+                          {album.title}
+                        </h4>
+                        <p className="text-gray-400 text-xs truncate">
+                          {album.singerName || "Album"}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* BÀI HÁT */}
               {results.songs && results.songs.length > 0 && (
                 <div className="mb-3">
@@ -209,6 +306,12 @@ export default function SearchBar({ onSelectSong }) {
                           {song.singerName}
                         </p>
                       </div>
+                      {/* ✅ Indicator nếu không có fileUrl */}
+                      {!song.fileUrl && (
+                        <div className="text-xs text-red-400 bg-red-400/10 px-2 py-1 rounded">
+                          No audio
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -249,7 +352,7 @@ export default function SearchBar({ onSelectSong }) {
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 10px;
         }
