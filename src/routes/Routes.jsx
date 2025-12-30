@@ -32,6 +32,7 @@ import Listeners from "../components/pages/Admin/ManageUser";
 import Features from "../components/pages/Admin/MangeSongFeature";
 import Profile from "../components/pages/User/Profile";
 import ClassifySongEmotion from "../components/pages/Admin/ClassifySongEmotion";
+import AdminGuard from "./AdminGuard";
 
 const router = createBrowserRouter([
   // 🔹 Auth routes
@@ -69,7 +70,7 @@ const router = createBrowserRouter([
   // 🔹 Admin routes
   {
     path: "/admin",
-    element: <AdminLayout />,
+    element: <AdminGuard />,
     children: [
       { index: true, element: <Dashboard /> },
       { path: "songs", element: <Songs /> },

@@ -4,35 +4,32 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // 🟢 Lấy user từ localStorage (có kiểm tra an toàn)
   useEffect(() => {
     try {
       const savedUser = localStorage.getItem("user");
       if (savedUser && savedUser !== "undefined") {
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
+        setUser(JSON.parse(savedUser));
       } else {
-        localStorage.removeItem("user"); // Dọn rác nếu có chuỗi "undefined"
+        localStorage.removeItem("user");
       }
-    } catch (error) {
-      console.error("Lỗi khi đọc user từ localStorage:", error);
+    } catch (e) {
       localStorage.removeItem("user");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  // ✅ Hàm đăng nhập
-  // ✅ Hàm đăng nhập
   const login = (userData) => {
-    // Nếu backend trả về có trường "data" thì dùng nó
     const data = userData.data || userData;
 
-    // Gán lại các field chuẩn hóa
     const formattedUser = {
       userId: data.userId,
       name: data.name,
       email: data.email,
-      token: data.token, // Lưu token nếu cần gọi API bảo mật
+      roleName: data.roleName, // 🔥 QUAN TRỌNG
+      token: data.token,
     };
 
     setUser(formattedUser);
@@ -40,19 +37,17 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("token", data.token);
   };
 
-  // ✅ Hàm đăng xuất
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
-    localStorage.removeItem("token"); // dọn luôn token nếu có
+    localStorage.removeItem("token");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// ✅ Hook tiện dùng
 export const useAuth = () => useContext(AuthContext);

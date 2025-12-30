@@ -42,19 +42,14 @@ const LoginPage = () => {
       if (res.data.success) {
         const userData = res.data.data;
 
-        // 🔎 DEBUG – nên giữ lúc dev
         console.log("LOGIN USER:", userData);
 
-        // ✅ Lưu token
         localStorage.setItem("token", userData.token);
-
-        // ✅ Lưu user vào AuthContext
         login(userData);
 
         setSuccess("Đăng nhập thành công!");
 
         setTimeout(() => {
-          // 🔥 PHÂN QUYỀN ĐIỀU HƯỚNG
           if (userData?.roleName === "admin") {
             navigate("/admin");
           } else {
