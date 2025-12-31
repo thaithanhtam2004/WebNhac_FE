@@ -60,20 +60,6 @@ const Profile = () => {
             </div>
           </div>
         </div>
-
-        {/* Security Section */}
-        <div className="bg-[#181818] rounded-lg p-6 mb-4">
-          <div className="flex items-center gap-3 mb-4">
-            <Shield className="w-5 h-5 text-white" />
-            <h3 className="text-white font-semibold">Bảo mật</h3>
-          </div>
-          <button
-            onClick={handleChangePassword}
-            className="w-full px-4 py-3 bg-[#282828] text-white rounded-lg hover:bg-[#383838] transition-colors text-sm font-medium"
-          >
-            Đổi mật khẩu
-          </button>
-        </div>
       </div>
     </div>
   );
