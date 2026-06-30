@@ -1,16 +1,46 @@
-# React + Vite
+# 3TMUSIC - Frontend (React.js) 🎵
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Đây là kho lưu trữ chứa mã nguồn giao diện người dùng (Frontend) của nền tảng âm nhạc trực tuyến **3TMUSIC**. 
 
-Currently, two official plugins are available:
+Dự án này được xây dựng bằng React.js, Vite và TailwindCSS.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Hướng dẫn chạy dự án bằng Docker (Dành cho nhóm)
 
-## React Compiler
+Để hệ thống Frontend và Backend có thể kết nối với nhau hoàn chỉnh thông qua Docker, toàn bộ cấu hình chạy (`docker-compose.yml`) đã được đặt ở kho lưu trữ **Backend**.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Vui lòng **KHÔNG** chạy riêng lẻ Frontend nếu không cần thiết. Hãy làm theo hướng dẫn dưới đây để chạy toàn bộ hệ thống:
 
-## Expanding the ESLint configuration
+### Bước 1: Clone 2 kho lưu trữ
+Hãy tạo một thư mục trống trên máy (ví dụ `Music_CV`), sau đó mở Terminal và clone cả Frontend lẫn Backend vào thư mục đó:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+# Clone Frontend (Thư mục bạn đang xem)
+git clone https://github.com/thaithanhtam2004/WebNhac_FE.git
+
+# Clone Backend
+git clone https://github.com/thaithanhtam2004/WebNhac_BE.git
+```
+
+*(Lưu ý: 2 thư mục `WebNhac_FE` và `WebNhac_BE` bắt buộc phải nằm cạnh nhau)*
+
+### Bước 2: Chạy hệ thống bằng Docker
+Mở Terminal, di chuyển vào thư mục **Backend** và chạy Docker:
+
+```bash
+cd WebNhac_BE
+docker-compose up -d --build
+```
+
+### Bước 3: Truy cập trang web
+Sau khi Docker báo chạy thành công, giao diện Frontend sẽ tự động phục vụ tại địa chỉ:
+👉 **[http://localhost:5173](http://localhost:5173)**
+
+---
+
+## 🛠 (Tùy chọn) Chạy Frontend độc lập không dùng Docker
+Nếu bạn chỉ muốn thiết kế giao diện (UI) và không cần kết nối API, hoặc Backend đã được chạy riêng biệt ở nơi khác, bạn có thể chạy FE thuần túy bằng lệnh:
+
+```bash
+npm install
+npm run dev
+```
