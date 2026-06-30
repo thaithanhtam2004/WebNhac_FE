@@ -107,14 +107,14 @@ export default function SearchBar({ onSelectSong }) {
     console.log("👤 Singer selected:", singer);
     setShowResults(false);
     setSearchQuery("");
-    navigate(`/singer/${singer.singerId}`);
+    navigate(`/artists/${singer.singerId}`);
   };
 
   const handleSelectGenre = (genre) => {
     console.log("🎸 Genre selected:", genre);
     setShowResults(false);
     setSearchQuery("");
-    navigate(`/genre/${genre.genreId}`);
+    navigate(`/genres/${genre.genreId}`);
   };
 
   // ✅ Handler cho album
@@ -122,7 +122,7 @@ export default function SearchBar({ onSelectSong }) {
     console.log("💿 Album selected:", album);
     setShowResults(false);
     setSearchQuery("");
-    navigate(`/album/${album.albumId}`);
+    navigate(`/albums/${album.albumId}`);
   };
 
   const clearSearch = () => {

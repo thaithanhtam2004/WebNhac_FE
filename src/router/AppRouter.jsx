@@ -23,6 +23,8 @@ import PlaylistListPage from "../pages/home/PlaylistListPage";
 import SearchResultPage from "../pages/home/SearchResultPage";
 import FavoritesPage from "../pages/home/FavoritesPage";
 import HistoryPage from "../pages/home/HistoryPage";
+import ArtistPage from "../pages/home/ArtistPage";
+import GenrePage from "../pages/home/GenrePage";
 
 // User pages
 import ProfilePage from "../pages/user/ProfilePage";
@@ -67,6 +69,8 @@ const router = createBrowserRouter([
       { path: "profile",               element: <ProfilePage /> },
       { path: "result",                element: <SearchResultPage /> },
       { path: "latest",                element: <LatestPage /> },
+      { path: "artists/:artistId",     element: <ArtistPage /> },
+      { path: "genres/:genreId",       element: <GenrePage /> },
     ],
   },
 
