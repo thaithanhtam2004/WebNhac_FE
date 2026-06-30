@@ -1,9 +1,14 @@
 import { useState } from "react";
 import React from "react";
-import ConfirmDialog from "../components/elements/ConfirmDialog";
+import { createPortal } from "react-dom";
+import ConfirmDialog from "../components/common/ConfirmDialog";
+import { useScrollLock } from "./useScrollLock";
 
 export function useConfirmDialog() {
   const [dialog, setDialog] = useState(null);
+  
+  // Áp dụng hook khóa cuộn khi có dialog
+  useScrollLock(!!dialog);
 
   const confirm = (message, title = "Xác nhận") => {
     return new Promise((resolve) => {
@@ -24,12 +29,15 @@ export function useConfirmDialog() {
 
   const ConfirmUI =
     dialog &&
-    React.createElement(ConfirmDialog, {
-      title: dialog.title,
-      message: dialog.message,
-      onConfirm: dialog.onConfirm,
-      onCancel: dialog.onCancel,
-    });
+    createPortal(
+      React.createElement(ConfirmDialog, {
+        title: dialog.title,
+        message: dialog.message,
+        onConfirm: dialog.onConfirm,
+        onCancel: dialog.onCancel,
+      }),
+      document.body
+    );
 
   return { confirm, ConfirmUI };
 }

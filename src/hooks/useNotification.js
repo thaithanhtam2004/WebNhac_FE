@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Notification from "../components/elements/Notification";
+import Notification from "../components/common/Notification";
 import React from "react"; // ⚠️ cần import React để dùng createElement
 
 export function useNotification() {
